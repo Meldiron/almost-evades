@@ -15,6 +15,7 @@
 	let ctx: any = null;
 	const players: any = {};
 	let levelName = '';
+	let sessionId = '';
 
 	onMount(async () => {
 		if (!browser) {
@@ -48,10 +49,12 @@
 		room: string;
 	}) {
 		if (room) {
+			console.log("Leavign room");
 			await room.leave();
 		}
 
-		room = await colyseus.playLevel(data.room);
+		console.log("Joining room ", data.room);
+		room = await colyseus.playLevel(data.room, {sessionId});
 
 		didInit = false;
 
@@ -142,6 +145,10 @@
 	async function initState() {
 		room.onMessage('goToRoom', (data: any) => {
 			goToRoom(data);
+		});
+
+		room.onMessage('sessionId', (data: any) => {
+			sessionId = data.sessionId;
 		});
 
 		room.state.players.onAdd = (player: any, sessionId: any) => {

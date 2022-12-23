@@ -1,7 +1,7 @@
 import { Schema, type, MapSchema } from '@colyseus/schema';
 import { Client } from 'colyseus';
 import { CollideUtils } from '../../collideUtils';
-import { userData } from '../Room';
+import { sessions } from '../Room';
 
 export class Player extends Schema {
 	@type('number')
@@ -32,11 +32,11 @@ export class Player extends Schema {
 		this.y = y;
 		this.nickname = this.client.auth.profile.nickname;
 
-		const userId = this.client.auth.user.$id;
+		const sessionId = this.client.auth.sessionId;
 
-		this.isSlow = userData[userId].isSlow;
-		this.directionX = userData[userId].directionX;
-		this.directionY = userData[userId].directionY;
+		this.isSlow = sessions[sessionId].isSlow;
+		this.directionX = sessions[sessionId].directionX;
+		this.directionY = sessions[sessionId].directionY;
 	}
 
 	update(deltaTime: number) {
@@ -75,11 +75,11 @@ export class Player extends Schema {
 			collisionObject.y = collisionLeft.y;
 
 			if(this.room.previousLevel) {
-				const userId = this.client.auth.user.$id;
-				userData[userId].lastLevel = this.room.id;
-				userData[userId].isSlow = this.isSlow;
-				userData[userId].directionX = this.directionX;
-				userData[userId].directionY = this.directionY;
+				const sessionId = this.client.auth.sessionId;
+				sessions[sessionId].lastLevel = this.room.id;
+				sessions[sessionId].isSlow = this.isSlow;
+				sessions[sessionId].directionX = this.directionX;
+				sessions[sessionId].directionY = this.directionY;
 				this.client.send('goToRoom', { room: this.room.previousLevel });
 			}
 		}
@@ -90,11 +90,11 @@ export class Player extends Schema {
 			collisionObject.y = collisionRight.y;
 			
 			if(this.room.nextLevel) {
-				const userId = this.client.auth.user.$id;
-				userData[userId].lastLevel = this.room.id;
-				userData[userId].isSlow = this.isSlow;
-				userData[userId].directionX = this.directionX;
-				userData[userId].directionY = this.directionY;
+				const sessionId = this.client.auth.sessionId;
+				sessions[sessionId].lastLevel = this.room.id;
+				sessions[sessionId].isSlow = this.isSlow;
+				sessions[sessionId].directionX = this.directionX;
+				sessions[sessionId].directionY = this.directionY;
 				this.client.send('goToRoom', { room: this.room.nextLevel });
 			}
 		}
@@ -151,8 +151,8 @@ export class RoomState extends Schema {
 		let x = 32 * 4;
 		const y = 32 * Math.floor(this.height / 2);
 
-		const userId = client.auth.user.$id;
-		if(userData[userId].lastLevel === this.nextLevel) {
+		const sessionId = client.auth.sessionId;
+		if(sessions[sessionId].lastLevel === this.nextLevel) {
 			x = 32 * (this.width - 4);
 		}
 
@@ -160,6 +160,8 @@ export class RoomState extends Schema {
 			client.sessionId,
 			new Player(this, client, x, y)
 		);
+
+		client.send('sessionId', { sessionId });
 	}
 
 	removePlayer(client: Client) {
