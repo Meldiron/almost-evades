@@ -8,7 +8,7 @@ export class ColyseusService {
 	jwt: string = '';
 
 	constructor(hostname: string) {
-		this.client = new Colyseus.Client('ws://' + hostname);
+		this.client = new Colyseus.Client('wss://' + hostname);
 
 		const jwt = localStorage.getItem('jwt');
 		if (jwt) {

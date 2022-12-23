@@ -13,16 +13,6 @@ const account = new Account(client);
 const functions = new Functions(client);
 const databases = new Databases(client);
 
-const errorHandler = (cb: any) => {
-	return async () => {
-		try {
-			return await cb();
-		} catch (err: any) {
-			console.error(err);
-			Swal.fire('Error!', err.message ? err.message : err.toString());
-		}
-	};
-};
 
 if (browser) {
 	window.addEventListener('unhandledrejection', function (event) {
