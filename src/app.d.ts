@@ -9,3 +9,4 @@ declare namespace App {
 }
 
 declare const Swal: any;
+declare const Colyseus: any;
