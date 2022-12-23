@@ -40,7 +40,7 @@ export class Player extends Schema {
 		const baseSpeed = deltaTime * 0.3;
 		let speed = baseSpeed;
 
-		if (this.x < 32 * 10 || this.x > (this.room.width-10) * 32) {
+		if (this.x < 32 * 8 || this.x > (this.room.width-8) * 32) {
 			speed = baseSpeed * 2;
 		}
 
