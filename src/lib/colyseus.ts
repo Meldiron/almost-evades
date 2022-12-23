@@ -1,4 +1,3 @@
-import * as Colyseus from 'colyseus.js'; // not necessary if included via <script> tag.
 import { AppwriteService } from './appwrite';
 import {get} from 'svelte/store';
 import { accountStore } from './stores';
