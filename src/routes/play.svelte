@@ -11,7 +11,7 @@
 	const servers = dev ? {
         'localhost:3000': 'Development'
     } : {
-		'server1.evades.almostapps.eu': 'EU #1'
+		'eu1.evades.almostapps.eu': 'EU #1'
 	};
 
 	let map = Object.keys(maps)[0];
