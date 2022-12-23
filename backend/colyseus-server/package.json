@@ -35,6 +35,9 @@
     "@colyseus/monitor": "^0.14.20",
     "colyseus": "^0.14.20",
     "cors": "^2.8.5",
-    "express": "^4.16.4"
+    "dotenv": "^16.0.3",
+    "express": "^4.16.4",
+    "express-basic-auth": "^1.2.1",
+    "node-appwrite": "^8.1.0"
   }
 }

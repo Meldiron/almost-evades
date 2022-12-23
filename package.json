@@ -32,6 +32,8 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"appwrite": "^10.1.0"
+		"appwrite": "^10.1.0",
+		"colyseus.js": "^0.14.13",
+		"kaboom": "^2000.2.10"
 	}
 }

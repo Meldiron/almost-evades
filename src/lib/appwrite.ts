@@ -50,6 +50,9 @@ export const AppwriteService = {
 	getAccount: async () => {
 		return await account.get();
 	},
+	getJwtKey: async () => {
+		return (await account.createJWT()).jwt;
+	},
 	getProfile: async (userId: string) => {
 		return await databases.getDocument<Profile>('default', 'profiles', userId);
 	},

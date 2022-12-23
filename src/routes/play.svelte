@@ -5,7 +5,7 @@
 	import { dev } from '$app/environment';
 
 	const maps = {
-		myFirstJourney: 'My First Journey (Easy)'
+		myFirstJourney001: 'My First Journey (Easy)'
 	};
 
 	const servers = dev ? {

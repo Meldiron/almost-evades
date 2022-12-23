@@ -1,9 +1,10 @@
 <script lang="ts">
+	import '../app.css';
+	
 	import { AppwriteService } from '$lib/appwrite';
 	import { accountStore, profileStore } from '$lib/stores';
 	import type { Models } from 'appwrite';
 	import { onMount } from 'svelte';
-	import '../app.css';
 	import Layout from '$lib/components/layout.svelte';
 
 	let finished = false;
