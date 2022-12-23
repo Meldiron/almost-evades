@@ -1,9 +1,12 @@
 TODO:
-- Max 100 players in room
 - Max 1 session per player
-- Only allow to join level 1
-- on disconnect, alert
-- security of room switching (and hasFinished trustness)
+- make nickname more readable in canvas
+- chat
+- enemy
+- upgrades
+- more enemies
+- main map
+- more maps
 
 ```sh
 # Machine setup

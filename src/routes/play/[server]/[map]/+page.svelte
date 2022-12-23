@@ -75,7 +75,7 @@
 
 		actionsWileSwitching.forEach((a) => {
 			room.send(a.name, a.data);
-		})
+		});
 
 		actionsWileSwitching = [];
 	}
@@ -197,6 +197,16 @@
 	}
 
 	async function initState() {
+		room.onError((code: any, message: any) => {
+			Swal.fire('Error!', message, 'error');
+		});
+
+		room.onLeave((code: any) => {
+			if(code !== 1000) {
+				Swal.fire('Error!', 'You got disconnect. Please reload the website.', 'error');
+			}
+		});
+
 		room.onMessage('goToRoom', (data: any) => {
 			goToRoom(data);
 		});
@@ -209,10 +219,10 @@
 			const nicknameCtx = add([
 				'destroyable',
 				text(player.nickname, {
-					size: 14
+					size: 12,
 				}),
 				color(0, 0, 0),
-				pos(player.x, player.y - 24),
+				pos(player.x, player.y - 16),
 				origin('center')
 			]);
 
@@ -250,15 +260,15 @@
 	}
 
 	function sendAction(name: string, data: any = undefined) {
-		if(switchingRooms) {
-			actionsWileSwitching.push({name, data});
+		if (switchingRooms) {
+			actionsWileSwitching.push({ name, data });
 		} else {
 			room.send(name, data);
 		}
 	}
 </script>
 
-<div id="game" class="fixed inset-0" />
+<div id="game" class="fixed inset-0 font-normal" />
 <div class="fixed inset-0 z-[100]">
 	{#if levelName}
 		<div class="flex justify-center">

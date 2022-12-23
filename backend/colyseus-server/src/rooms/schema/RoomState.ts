@@ -40,6 +40,8 @@ export class Player extends Schema {
 	}
 
 	update(deltaTime: number) {
+		const sessionId = this.client.auth.sessionId;
+		
 		const baseSpeed = deltaTime * 0.3;
 		let speed = baseSpeed;
 
@@ -75,12 +77,14 @@ export class Player extends Schema {
 			collisionObject.y = collisionLeft.y;
 
 			if(this.room.previousLevel) {
-				const sessionId = this.client.auth.sessionId;
 				sessions[sessionId].lastLevel = this.room.id;
 				sessions[sessionId].isSlow = this.isSlow;
 				sessions[sessionId].directionX = this.directionX;
 				sessions[sessionId].directionY = this.directionY;
+				sessions[sessionId].x = undefined;
+				sessions[sessionId].y = undefined;
 				this.client.send('goToRoom', { room: this.room.previousLevel });
+				return;
 			}
 		}
 
@@ -90,12 +94,14 @@ export class Player extends Schema {
 			collisionObject.y = collisionRight.y;
 			
 			if(this.room.nextLevel) {
-				const sessionId = this.client.auth.sessionId;
 				sessions[sessionId].lastLevel = this.room.id;
 				sessions[sessionId].isSlow = this.isSlow;
 				sessions[sessionId].directionX = this.directionX;
 				sessions[sessionId].directionY = this.directionY;
+				sessions[sessionId].x = undefined;
+				sessions[sessionId].y = undefined;
 				this.client.send('goToRoom', { room: this.room.nextLevel });
+				return;
 			}
 		}
 
@@ -113,6 +119,9 @@ export class Player extends Schema {
 
 		this.x = collisionObject.x;
 		this.y = collisionObject.y;
+
+		sessions[sessionId].x = this.x;
+		sessions[sessionId].y = this.y;
 	}
 }
 
@@ -132,7 +141,7 @@ export class RoomState extends Schema {
 	@type('boolean')
 	isWin = false;
 
-	constructor(public id: string, name: string, height: number, width: number, public previousLevel: string, public nextLevel: string, isWin: boolean = false) {
+	constructor(public id: string, name: string, height: number, width: number, public previousLevel: string, public nextLevel: string, isWin: boolean = false, public isFirst: boolean = false) {
 		super();
 
 		this.name = name;
@@ -149,11 +158,21 @@ export class RoomState extends Schema {
 
 	createPlayer(client: Client) {
 		let x = 32 * 4;
-		const y = 32 * Math.floor(this.height / 2);
+		let y = 32 * Math.floor(this.height / 2);
 
 		const sessionId = client.auth.sessionId;
 		if(sessions[sessionId].lastLevel === this.nextLevel) {
 			x = 32 * (this.width - 4);
+		}
+
+		sessions[sessionId].currentLevel = this.id;
+
+		if(sessions[sessionId].x) {
+			x = sessions[sessionId].x;
+		}
+
+		if(sessions[sessionId].y) {
+			y = sessions[sessionId].y;
 		}
 
 		this.players.set(
