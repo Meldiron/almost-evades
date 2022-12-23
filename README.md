@@ -1,3 +1,10 @@
+TODO:
+- Max 100 players in room
+- Max 1 session per player
+- Only allow to join level 1
+- on disconnect, alert
+- security of room switching (and hasFinished trustness)
+
 ```sh
 # Machine setup
 curl -fsSL https://deb.nodesource.com/setup_19.x | bash - && apt-get install -y nodejs

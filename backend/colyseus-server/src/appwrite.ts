@@ -1,8 +1,5 @@
 import { Account, Client, Users, Databases, Models } from 'node-appwrite';
 
-import * as dotenv from "dotenv";
-const vars = dotenv.config();
-
 const apiKey = process.env.APPWRITE_API_KEY;
 
 export type Profile = Models.Document & {

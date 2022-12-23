@@ -2,10 +2,17 @@ import Arena from "@colyseus/arena";
 import { monitor } from "@colyseus/monitor";
 import basicAuth from "express-basic-auth";
 
+
+import * as dotenv from "dotenv";
+dotenv.config();
+
 /**
  * Import your Room files
  */
 import { myFirstJourney001 } from "./rooms/myFirstJourney001";
+import { myFirstJourney002 } from "./rooms/myFirstJourney002";
+import { myFirstJourney003 } from "./rooms/myFirstJourney003";
+import { myFirstJourney004 } from "./rooms/myFirstJourney004";
 
 export default Arena({
     getId: () => "Almost Evades",
@@ -15,6 +22,9 @@ export default Arena({
          * Define your room handlers:
          */
         gameServer.define('myFirstJourney001', myFirstJourney001);
+        gameServer.define('myFirstJourney002', myFirstJourney002);
+        gameServer.define('myFirstJourney003', myFirstJourney003);
+        gameServer.define('myFirstJourney004', myFirstJourney004);
 
     },
 

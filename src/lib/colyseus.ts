@@ -3,11 +3,11 @@ import {get} from 'svelte/store';
 import { accountStore } from './stores';
 
 export class ColyseusService {
-	private client: Colyseus.Client;
+	private client: any;
 	jwt: string = '';
 
 	constructor(hostname: string) {
-		this.client = new Colyseus.Client('wss://' + hostname);
+		this.client = new Colyseus.Client((hostname.includes('localhost') ? 'ws' : 'wss') + '://' + hostname);
 
 		const jwt = localStorage.getItem('jwt');
 		if (jwt) {
@@ -44,8 +44,9 @@ export class ColyseusService {
 		return this.jwt;
 	}
 
-	async playLevel(name: string) {
+	async playLevel(name: string, data: any = {}) {
 		return await this.client.joinOrCreate(name, {
+			...data,
 			jwt: await this.getJwt()
 		});
 	}
