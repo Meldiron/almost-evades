@@ -7,7 +7,7 @@ export type Profile = Models.Document & {
 
 const client = new Client();
 
-client.setEndpoint('https://cloud.appwrite.io/v1').setProject('almostEvades');
+client.setEndpoint('https://backend.evades.almostapps.eu/v1').setProject('almostEvades');
 
 const account = new Account(client);
 const functions = new Functions(client);
