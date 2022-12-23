@@ -8,11 +8,16 @@
 	import { page } from '$app/stores';
 
 	import kaboom from 'kaboom';
+	import { browser } from '$app/environment';
 
 	let room: any = null;
 	const players: any = {};
 
 	onMount(async () => {
+        if(!browser) {
+            return;
+        }
+        
 		if (!$accountStore || !$profileStore) {
 			goto('/');
 			return;

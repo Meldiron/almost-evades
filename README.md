@@ -2,6 +2,39 @@
 # Machine setup
 curl -fsSL https://deb.nodesource.com/setup_19.x | bash - && apt-get install -y nodejs
 
+# SSL setup
+sudo snap install core; sudo snap refresh core
+sudo snap set certbot trust-plugin-with-root=ok
+sudo snap install --classic certbot
+sudo ln -s /snap/bin/certbot /usr/bin/certbot
+
+sudo apt install -y nginx
+
+nano /etc/nginx/sites-available/eu1.evades.almostapps.eu
+
+# Code to put into:
+# server {
+#     listen 80;
+#     listen [::]:80;
+#     server_name eu1.evades.almostapps.eu;
+
+#     location / {
+#         proxy_pass http://127.0.0.1:3000;
+#         proxy_set_header Host $host;
+#         proxy_set_header X-Forwarded-Proto $scheme;
+#         proxy_set_header X-Real-IP $remote_addr;
+#         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#     }
+# }
+
+ln -s /etc/nginx/sites-available/eu1.evades.almostapps.eu /etc/nginx/sites-enabled/eu1.evades.almostapps.eu
+sudo service nginx reload
+sudo snap install certbot-dns-google
+
+certbot
+
+sudo service nginx reload
+
 # Project setup
 git clone https://github.com/Meldiron/almost-evades.git
 cd almost-evades/backend/colyseus-server
@@ -9,7 +42,7 @@ npm install
 
 # Production setup
 cp .env.example .env
-nano .env
+nano .env # (api_key)
 npm run build
 
 # Server start
