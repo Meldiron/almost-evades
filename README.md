@@ -1,3 +1,22 @@
+```sh
+# Machine setup
+curl -fsSL https://deb.nodesource.com/setup_19.x | bash - && apt-get install -y nodejs
+
+# Project setup
+git clone https://github.com/Meldiron/almost-evades.git
+cd almost-evades/backend/colyseus-server
+npm install
+
+# Production setup
+cp .env.example .env
+nano .env
+npm run build
+
+# Server start
+screen -S colyseus
+node lib/index.js
+```
+
 # create-svelte
 
 Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
