@@ -41,24 +41,17 @@
 
 		colyseus = new ColyseusService(server);
 
-		goToRoom({ hasFinished: false, room: map, isSlow: false, directionX: 'none', directionY: 'none' });
+		goToRoom({ room: map });
 	});
 
 	async function goToRoom(data: {
-		hasFinished: boolean,
 		room: string;
-		isSlow: boolean;
-		directionY: string;
-		directionX: string;
 	}) {
 		if (room) {
 			await room.leave();
 		}
 
-		room = await colyseus.playLevel(data.room, {
-			...data,
-			room: undefined
-		});
+		room = await colyseus.playLevel(data.room);
 
 		didInit = false;
 

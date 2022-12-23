@@ -4,45 +4,49 @@ import { Player } from './schema/RoomState';
 import { RoomState } from './schema/RoomState';
 
 const jwtCache: any = {};
+export const userData: any = {};
 
 export class GameRoom extends Room<RoomState> {
-	async onAuth(
-		client: Client,
-		options: { hasFinished: boolean, jwt: string; isSlow: boolean; directionX: string; directionY: string }
-	) {
-		const initState = {
-			isSlow: options.isSlow,
-			directionX: options.directionX,
-			directionY: options.directionY,
-			hasFinished: options.hasFinished
-		};
+	private async getAuthData(jwt: string) {
+		if (!jwtCache[jwt]) {
+			const account = await AppwriteService.getAccount(jwt);
 
-		if (jwtCache[options.jwt]) {
-			jwtCache[options.jwt] = {
-				...jwtCache[options.jwt],
-				initState
-			};
-			return jwtCache[options.jwt];
+			const [user, profile] = await Promise.all([
+				AppwriteService.getUser(account.$id),
+				AppwriteService.getProfile(account.$id)
+			]);
+
+			const response = { user, profile };
+
+			if(!userData[user.$id]) {
+				userData[user.$id] = {};
+			}
+
+			jwtCache[jwt] = response;
+
+			setTimeout(() => {
+				const userId = jwtCache[jwt].user.$id;
+				const activeJwtKey = Object.values(jwtCache).find((v: any) => v.user.$id === userId);
+
+				if(!activeJwtKey) {
+					delete userData[userId];
+				}
+
+				delete jwtCache[jwt];
+			}, 1000 * 60 * 16);
 		}
 
-		const account = await AppwriteService.getAccount(options.jwt);
+		return jwtCache[jwt];
+	}
 
-		const [user, profile] = await Promise.all([
-			AppwriteService.getUser(account.$id),
-			AppwriteService.getProfile(account.$id)
-		]);
+	async onAuth(client: Client, options: { jwt: string }) {
+		const { user, profile } = await this.getAuthData(options.jwt);
 
 		const response = {
+			jwt: options.jwt,
 			user,
-			profile,
-			initState
+			profile
 		};
-
-		jwtCache[options.jwt] = response;
-
-		setTimeout(() => {
-			delete jwtCache[options.jwt];
-		}, 1000 * 60 * 16);
 
 		return response;
 	}
