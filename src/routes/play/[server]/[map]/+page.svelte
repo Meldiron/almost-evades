@@ -46,22 +46,20 @@
 	});
 
 	let switchingRooms = false;
-	async function goToRoom(data: {
-		room: string;
-	}) {
-		if(switchingRooms) {
+	let actionsWileSwitching: any[] = [];
+	async function goToRoom(data: { room: string }) {
+		if (switchingRooms) {
 			return;
 		}
 
+		actionsWileSwitching = [];
 		switchingRooms = true;
 
 		if (room) {
-			console.log("Leavign room");
 			await room.leave();
 		}
 
-		console.log("Joining room ", data.room);
-		room = await colyseus.playLevel(data.room, {sessionId});
+		room = await colyseus.playLevel(data.room, { sessionId });
 
 		didInit = false;
 
@@ -74,6 +72,12 @@
 		};
 
 		switchingRooms = false;
+
+		actionsWileSwitching.forEach((a) => {
+			room.send(a.name, a.data);
+		})
+
+		actionsWileSwitching = [];
 	}
 
 	let didInit = false;
@@ -83,6 +87,47 @@
 
 		if (!didInitOnce) {
 			didInitOnce = true;
+
+			const keyDirections: any = {
+				'68': 'right',
+				'39': 'right',
+				'65': 'left',
+				'37': 'left',
+				'87': 'up',
+				'38': 'up',
+				'83': 'down',
+				'40': 'down',
+				'16': 'slow'
+			};
+
+			window.addEventListener('keydown', (event: any) => {
+				if (event.repeat) {
+					return;
+				}
+
+				const direction = keyDirections[event.keyCode.toString()];
+
+				if (direction === 'slow') {
+					sendAction('slow');
+				} else {
+					sendAction('move', { direction });
+				}
+			});
+
+			window.addEventListener('keyup', (event: any) => {
+				if (event.repeat) {
+					return;
+				}
+
+				const direction = keyDirections[event.keyCode.toString()];
+
+				if (direction === 'slow') {
+					sendAction('slowEnd');
+				} else {
+					sendAction('moveEnd', { direction });
+				}
+			});
+
 			onUpdate(() => {
 				every('movable', (ctx) => {
 					const pos = vec2(lerp(ctx.pos.x, ctx.serverX, 0.3), lerp(ctx.pos.y, ctx.serverY, 0.3));
@@ -202,46 +247,14 @@
 			players[sessionId].ctx.destroy();
 			delete players[sessionId];
 		};
+	}
 
-		const keyDirections: any = {
-			'68': 'right',
-			'39': 'right',
-			'65': 'left',
-			'37': 'left',
-			'87': 'up',
-			'38': 'up',
-			'83': 'down',
-			'40': 'down',
-			'16': 'slow'
-		};
-
-		window.addEventListener('keydown', (event: any) => {
-			if (event.repeat) {
-				return;
-			}
-
-			const direction = keyDirections[event.keyCode.toString()];
-
-			if (direction === 'slow') {
-				room.send('slow');
-			} else {
-				room.send('move', { direction });
-			}
-		});
-
-		window.addEventListener('keyup', (event: any) => {
-			if (event.repeat) {
-				return;
-			}
-
-			const direction = keyDirections[event.keyCode.toString()];
-
-			if (direction === 'slow') {
-				room.send('slowEnd');
-			} else {
-				room.send('moveEnd', { direction });
-			}
-		});
+	function sendAction(name: string, data: any = undefined) {
+		if(switchingRooms) {
+			actionsWileSwitching.push({name, data});
+		} else {
+			room.send(name, data);
+		}
 	}
 </script>
 
