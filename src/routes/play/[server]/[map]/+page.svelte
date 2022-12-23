@@ -45,9 +45,16 @@
 		goToRoom({ room: map });
 	});
 
+	let switchingRooms = false;
 	async function goToRoom(data: {
 		room: string;
 	}) {
+		if(switchingRooms) {
+			return;
+		}
+
+		switchingRooms = true;
+
 		if (room) {
 			console.log("Leavign room");
 			await room.leave();
@@ -65,6 +72,8 @@
 		room.state.onChange = () => {
 			initCanvas(room.state);
 		};
+
+		switchingRooms = false;
 	}
 
 	let didInit = false;
