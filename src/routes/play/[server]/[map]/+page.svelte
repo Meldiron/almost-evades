@@ -267,6 +267,9 @@
 		};
 
 		room.state.players.onRemove = (player: any, sessionId: any) => {
+			if(players[sessionId].ctx.nicknameCtx) {
+				players[sessionId].ctx.nicknameCtx.destroy();
+			}
 			players[sessionId].ctx.destroy();
 			delete players[sessionId];
 		};
