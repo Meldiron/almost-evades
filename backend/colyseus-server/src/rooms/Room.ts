@@ -71,7 +71,7 @@ export class GameRoom extends Room<RoomState> {
 			delete sessions[sessionId];
 			delete users[client.auth.user.$id];
 			this.state.removePlayer(client);
-			client.close();
+			client.leave();
 		});
 	}
 
