@@ -105,6 +105,11 @@
 					return;
 				}
 
+				if(event.keyCode === 80) {
+					sendAction('restart');
+					return;
+				}
+
 				const direction = keyDirections[event.keyCode.toString()];
 
 				if (direction === 'slow') {
@@ -133,7 +138,9 @@
 					const pos = vec2(lerp(ctx.pos.x, ctx.serverX, 0.3), lerp(ctx.pos.y, ctx.serverY, 0.3));
 					ctx.moveTo(pos);
 
-					ctx.nicknameCtx.moveTo(vec2(pos.x, pos.y - 28));
+					if(ctx.nicknameCtx) {
+						ctx.nicknameCtx.moveTo(vec2(pos.x, pos.y - 28));
+					}
 
 					if (ctx.self) {
 						camPos(pos);
@@ -202,7 +209,7 @@
 		});
 
 		room.onLeave((code: any) => {
-			if(code !== 1000) {
+			if (code !== 1000) {
 				Swal.fire('Error!', 'You got disconnect. Please reload the website.', 'error');
 			}
 		});
@@ -216,30 +223,35 @@
 		});
 
 		room.state.players.onAdd = (player: any, sessionId: any) => {
-			const nicknameCtx = add([
-				'destroyable',
-				text(player.nickname, {
-					size: 12,
-				}),
-				color(0, 0, 0),
-				pos(player.x, player.y - 16),
-				origin('center')
-			]);
-
-			const playerCtx = add([
+			const playerComponents = [
 				'destroyable',
 				'movable',
 				pos(player.x, player.y),
 				circle(16),
 				origin('center'),
-				color(255, 0, 0),
+				opacity(player.isDead ? 0.5 : 1),
+				color(player.colorR, player.colorG, player.colorB),
 				{ self: sessionId === room.sessionId },
-				{ nicknameCtx },
 				{
 					serverX: player.x,
 					serverY: player.y
 				}
-			]);
+			];
+
+			if (player.nickname) {
+				const nicknameCtx = add([
+					'destroyable',
+					text(player.nickname, {
+						size: 12
+					}),
+					color(0, 0, 0),
+					pos(player.x, player.y - 16),
+					origin('center')
+				]);
+				playerComponents.push({ nicknameCtx });
+			}
+
+			const playerCtx = add(playerComponents);
 
 			players[sessionId] = {
 				ctx: playerCtx,
@@ -250,6 +262,7 @@
 				players[sessionId].state = player;
 				playerCtx.serverX = player.x;
 				playerCtx.serverY = player.y;
+				playerCtx.opacity = player.isDead ? 0.5 : 1;
 			};
 		};
 

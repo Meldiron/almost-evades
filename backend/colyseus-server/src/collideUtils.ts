@@ -107,10 +107,10 @@ export const CollideUtils = {
 			width: a.radius * 2,
 			height: a.radius * 2
 		}, {
-			x: a.x - a.radius,
-			y: a.y - a.radius,
-			width: a.radius * 2,
-			height: a.radius * 2
+			x: b.x - b.radius,
+			y: b.y - b.radius,
+			width: b.radius * 2,
+			height: b.radius * 2
 		});
 
 		return {

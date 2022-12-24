@@ -1,5 +1,6 @@
 import { Room, Client } from 'colyseus';
 import { AppwriteService } from '../appwrite';
+import { CollideUtils } from '../collideUtils';
 import { Player } from './schema/RoomState';
 import { RoomState } from './schema/RoomState';
 
@@ -64,6 +65,14 @@ export class GameRoom extends Room<RoomState> {
 		this.onMessage('slowEnd', (client: Client) => {
 			this.state.setSlow(client, false);
 		});
+
+		this.onMessage('restart', (client: Client) => {
+			const sessionId = client.auth.sessionId;
+			delete sessions[sessionId];
+			delete users[client.auth.user.$id];
+			this.state.removePlayer(client);
+			client.close();
+		});
 	}
 
 	onJoin(client: Client) {
@@ -75,8 +84,82 @@ export class GameRoom extends Room<RoomState> {
 	}
 
 	update(deltaTime: number) {
+		// Movement tick
 		this.state.players.forEach((player: Player) => {
 			player.update(deltaTime);
+		});
+
+		// Player <-> Enemy collision
+		this.state.players.forEach((player) => {
+			if(player.isEnemy) {
+				return;
+			}
+
+			this.state.players.forEach((enemy) => {
+				if(!enemy.isEnemy) {
+					return;
+				}
+
+				const collision = CollideUtils.circleWithCircle({
+					x: player.x,
+					y: player.y,
+					radius: player.radius
+				}, {
+					x: enemy.x,
+					y: enemy.y,
+					radius: enemy.radius
+				});
+
+				if(collision.collide) {
+					player.isDead = true;
+
+					if (player.client) {
+						const sessionId = player.client.auth.sessionId;
+						sessions[sessionId].isDead = true;
+					}
+				}
+			});
+		})
+
+		// Player <-> Player collision
+		this.state.players.forEach((player) => {
+			if(player.isEnemy) {
+				return;
+			}
+
+			this.state.players.forEach((player2) => {
+				if(player2.isEnemy) {
+					return;
+				}
+
+				if(player == player2) {
+					return;
+				}
+
+				const collision = CollideUtils.circleWithCircle({
+					x: player.x,
+					y: player.y,
+					radius: player.radius
+				}, {
+					x: player2.x,
+					y: player2.y,
+					radius: player2.radius
+				});
+
+				if(collision.collide) {
+					player.isDead = false;
+					if (player.client) {
+						const sessionId = player.client.auth.sessionId;
+						sessions[sessionId].isDead = false;
+					}
+
+					player2.isDead = false;
+					if (player2.client) {
+						const sessionId = player2.client.auth.sessionId;
+						sessions[sessionId].isDead = false;
+					}
+				}
+			});
 		});
 	}
 }
