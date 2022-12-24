@@ -136,6 +136,10 @@ export class GameRoom extends Room<RoomState> {
 					return;
 				}
 
+				if(player.isDead && player2.isDead) {
+					return;
+				}
+
 				const collision = CollideUtils.circleWithCircle({
 					x: player.x,
 					y: player.y,
