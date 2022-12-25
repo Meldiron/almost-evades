@@ -10,6 +10,7 @@ TODO:
 - bigger enemy more in background
 - Cannot kill on spawn
 - claim anonymous account
+- Dont disconenct from lobby on /r
 
 ```sh
 # Machine setup
