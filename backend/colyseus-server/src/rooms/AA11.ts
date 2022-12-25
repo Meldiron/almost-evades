@@ -10,7 +10,7 @@ export class AA11 extends GameRoom {
 			name: 'Angelic Alley - Win Area',
 			width: 16,
 			height: 16,
-			previous: '',
+			previous: 'AngelicAlley010',
 			next: '',
 			isWin: true
 		}
