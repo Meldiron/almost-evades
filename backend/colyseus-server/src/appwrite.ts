@@ -52,7 +52,8 @@ export const AppwriteService = {
 			x,
 			y,
 			isDead,
-			nickname
+			nickname,
+			didWin: false
 		});
 	},
 	getSession: async (sessionId: string) => {

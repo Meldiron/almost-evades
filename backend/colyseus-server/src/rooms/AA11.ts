@@ -18,15 +18,21 @@ export class AA11 extends GameRoom {
 
 	onCreate() {
 		this.setState(new RoomState(this.getRegistryData()));
-
 		super.onCreate();
 	}
 
 	onJoin(client: Client): void {
 		(async () => {
-			await AppwriteService.addVp(client.auth.session.userId, 1);
-			await AppwriteService.addMapWin(client.auth.session.userId, 'AngelicAlley');
-			client.send('chatMessage', { nickname: 'SYSTEM', msg: 'You won! We added +1 VP to your profile. You can leave now with /l' });
+			if(!client.auth.session.didWin) {
+				client.auth.session.didWin = true;
+				await AppwriteService.updateSession(client.auth.session);
+	
+				await AppwriteService.addVp(client.auth.session.userId, 1);
+				await AppwriteService.addMapWin(client.auth.session.userId, 'AngelicAlley');
+				client.send('chatMessage', { nickname: 'SYSTEM', msg: 'You won! We added +1 VP to your profile. You can leave now with /l' });
+			} else {
+				client.send('chatMessage', { nickname: 'SYSTEM', msg: 'You won! You can leave now with /l' });
+			}
 		})();
 		super.onJoin(client);
 	}

@@ -9,6 +9,7 @@ TODO:
 - player layer above enemy layer
 - bigger enemy more in background
 - Cannot kill on spawn
+- claim anonymous account
 
 ```sh
 # Machine setup
