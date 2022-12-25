@@ -9,10 +9,19 @@ dotenv.config();
 /**
  * Import your Room files
  */
-import { myFirstJourney001 } from "./rooms/myFirstJourney001";
 import { Lobby } from "./rooms/Lobby";
 import { RoomRegistry } from "./roomRegistry";
-import { myFirstJourney002 } from "./rooms/myFirstJourney002";
+import { AA1 } from "./rooms/AA1";
+import { AA2 } from "./rooms/AA2";
+import { AA3 } from "./rooms/AA3";
+import { AA4 } from "./rooms/AA4";
+import { AA5 } from "./rooms/AA5";
+import { AA6 } from "./rooms/AA6";
+import { AA7 } from "./rooms/AA7";
+import { AA8 } from "./rooms/AA8";
+import { AA9 } from "./rooms/AA9";
+import { AA10 } from "./rooms/AA10";
+import { AA11 } from "./rooms/AA11";
 
 export default Arena({
     getId: () => "Almost Evades",
@@ -23,12 +32,18 @@ export default Arena({
          */
         gameServer.define('Lobby', Lobby);
 
-        gameServer.define(new myFirstJourney001().getRegistryData().id, myFirstJourney001);
-        RoomRegistry.register(new myFirstJourney001().getRegistryData().id, new myFirstJourney001().getRegistryData());
-
-        gameServer.define(new myFirstJourney002().getRegistryData().id, myFirstJourney002);
-        RoomRegistry.register(new myFirstJourney002().getRegistryData().id, new myFirstJourney002().getRegistryData());
-
+        // Angelic Alley
+        RoomRegistry.register(gameServer, AA1);
+        RoomRegistry.register(gameServer, AA2);
+        RoomRegistry.register(gameServer, AA3);
+        RoomRegistry.register(gameServer, AA4);
+        RoomRegistry.register(gameServer, AA5);
+        RoomRegistry.register(gameServer, AA6);
+        RoomRegistry.register(gameServer, AA7);
+        RoomRegistry.register(gameServer, AA8);
+        RoomRegistry.register(gameServer, AA9);
+        RoomRegistry.register(gameServer, AA10);
+        RoomRegistry.register(gameServer, AA11);
     },
 
     initializeExpress: (app) => {

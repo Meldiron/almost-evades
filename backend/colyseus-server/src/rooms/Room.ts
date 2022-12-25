@@ -50,17 +50,24 @@ export abstract class GameRoom extends Room<RoomState> {
 		});
 
 		this.onMessage('slow', (client: Client) => {
-			this.state.setSlow(client, true);
+			this.state.players.get(client.sessionId).isSlow = true;
 		});
 
 		this.onMessage('slowEnd', (client: Client) => {
-			this.state.setSlow(client, false);
+			this.state.players.get(client.sessionId).isSlow = false;
 		});
 
 		this.onMessage('restart', async (client: Client) => {
 			client.auth.session.isActive = false;
 			await AppwriteService.updateSession(client.auth.session);
 			client.send('restartResponse');
+		});
+
+		this.onMessage('revive', async (client: Client) => {
+			const player = this.state.players.get(client.sessionId);
+			player.isDead = false;
+			player.client.auth.session.isDead = false;
+			await AppwriteService.updateSession(player.client.auth.session);
 		});
 	}
 

@@ -264,7 +264,7 @@
 				'destroyable',
 				'movable',
 				pos(player.x, player.y),
-				circle(16),
+				circle(player.radius),
 				origin('center'),
 				opacity(player.isDead ? 0.5 : 1),
 				color(player.colorR, player.colorG, player.colorB),
@@ -324,6 +324,8 @@
 	function onSubmitMessage() {
 		if (chatMsg === '/r') {
 			sendAction('restart');
+		} else if (chatMsg === '/l') {
+			sendAction('revive');
 		} else {
 			lobbyRoom.send('sendMessage', { msg: chatMsg });
 		}
@@ -350,22 +352,24 @@
 </div>
 
 <div class="fixed left-4 top-4 w-[300px] z-[110]">
-	<div id="chat" class="h-[200px] overflow-auto text-white bg-black p-3 rounded-t-md">
-		{#each messages as message}
-			<p><span class="text-slate-500">{message.nickname}: </span>{message.msg}</p>
-		{/each}
+	<div class="shadow-md rounded-md">
+		<div id="chat" class="h-[200px] overflow-auto text-white bg-black p-3 rounded-t-md">
+			{#each messages as message}
+				<p><span class="text-slate-500">{message.nickname}: </span>{message.msg}</p>
+			{/each}
+		</div>
+		<form on:submit|preventDefault={onSubmitMessage}>
+			<input
+				on:keydown={onInput}
+				on:keyup={onInput}
+				bind:value={chatMsg}
+				type="text"
+				class="w-full bg-white rounded-b-md p-2"
+				placeholder="Press enter to chat"
+			/>
+			<button type="button" class="hidden" />
+		</form>
 	</div>
-	<form on:submit|preventDefault={onSubmitMessage}>
-		<input
-			on:keydown={onInput}
-			on:keyup={onInput}
-			bind:value={chatMsg}
-			type="text"
-			class="w-full bg-white rounded-b-md p-2"
-			placeholder="Press enter to chat"
-		/>
-		<button type="button" class="hidden" />
-	</form>
 </div>
 
 <Layout>

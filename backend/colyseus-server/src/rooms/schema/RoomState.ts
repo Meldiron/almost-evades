@@ -25,6 +25,9 @@ export class Player extends Schema {
 	isSlow = false;
 
 	@type('number')
+	baseSpeed = 1;
+
+	@type('number')
 	radius = 16;
 
 	@type('boolean')
@@ -56,6 +59,8 @@ export class Player extends Schema {
 		y: number,
 		isDead: boolean,
 		color: number[],
+		baseSpeed: number = 1,
+		radius: number = 16,
 		public client: Client | null = null
 	) {
 		super();
@@ -68,6 +73,8 @@ export class Player extends Schema {
 		this.directionY = directionY;
 		this.isEnemy = isEnemy;
 		this.isDead = isDead;
+		this.baseSpeed = baseSpeed;
+		this.radius = radius;
 
 		this.colorR = color[0];
 		this.colorG = color[1];
@@ -79,7 +86,7 @@ export class Player extends Schema {
 			return;
 		}
 
-		const baseSpeed = deltaTime * 0.3;
+		const baseSpeed = (deltaTime * 0.3) * this.baseSpeed;
 		let speed = baseSpeed;
 
 		if (this.x < 32 * 8 || this.x > (this.room.width - 8) * 32) {
@@ -231,18 +238,22 @@ export class RoomState extends Schema {
 	}
 
 	createEnemy(
-		isSlow: boolean,
-		directionX: string,
-		directionY: string,
-		x: number,
-		y: number,
-		color: number[]
+		config: {
+			speed: number,
+			radius: number,
+			baseSpeed: number,
+			directionX: string,
+			directionY: string,
+			x: number,
+			y: number,
+			color: number[]
+		}
 	) {
 		const enemyId = crypto.randomUUID();
 
 		this.players.set(
 			enemyId,
-			new Player(this, true, '', isSlow, directionX, directionY, x, y, false, color)
+			new Player(this, true, '', false, config.directionX, config.directionY, config.x, config.y, false, config.color, config.speed, config.radius)
 		);
 	}
 
@@ -254,16 +265,12 @@ export class RoomState extends Schema {
 
 		this.players.set(
 			client.sessionId,
-			new Player(this, false, nickname, false, 'none', 'none', x, y, isDead, [255, 0, 0], client)
+			new Player(this, false, nickname, false, 'none', 'none', x, y, isDead, [255, 0, 0], 1, 16, client)
 		);
 	}
 
 	removePlayer(client: Client) {
 		this.players.delete(client.sessionId);
-	}
-
-	setSlow(client: Client, isSlow: boolean) {
-		this.players.get(client.sessionId).isSlow = isSlow;
 	}
 
 	setDirection(client: Client, direction: string) {
