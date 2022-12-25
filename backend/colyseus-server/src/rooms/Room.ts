@@ -77,6 +77,18 @@ export abstract class GameRoom extends Room<RoomState> {
 			player.isZombie = true;
 			const roomData = RoomRegistry.get(data.roomId);
 			client.auth.session.roomId = data.roomId;
+			client.auth.session.x = 4 * 32;
+			client.auth.session.y = Math.floor(roomData.height / 2) * 32;
+			await AppwriteService.updateSession(client.auth.session);
+			client.send('goToRoom', { roomId: data.roomId });
+		});
+
+		this.onMessage('cheatLevelEnd', async (client: Client, data: { roomId: string }) => {
+			const player = this.state.players.get(client.sessionId);
+
+			player.isZombie = true;
+			const roomData = RoomRegistry.get(data.roomId);
+			client.auth.session.roomId = data.roomId;
 			client.auth.session.x = (roomData.width - 4) * 32;
 			client.auth.session.y = Math.floor(roomData.height / 2) * 32;
 			await AppwriteService.updateSession(client.auth.session);

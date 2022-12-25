@@ -335,6 +335,8 @@
 			sendAction('cheatRevive');
 		} else if (chatMsg.startsWith('/level')) {
 			sendAction('cheatLevel' , { roomId: chatMsg.split(' ')[1] });
+		} else if (chatMsg.startsWith('/levelEnd')) {
+			sendAction('cheatLevelEnd' , { roomId: chatMsg.split(' ')[1] });
 		} else {
 			lobbyRoom.send('sendMessage', { msg: chatMsg });
 		}

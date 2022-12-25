@@ -19,7 +19,7 @@ export class AA7 extends GameRoom {
 		this.setState(new RoomState(this.getRegistryData()));
 
 		for (let i = 0; i < 15; i++) {
-			GameUtils.addNormalEnemy(this.state, this.getRegistryData(), { speed: 1.1 });
+			GameUtils.addNormalEnemy(this.state, this.getRegistryData(), { speed: 1 });
 		}
 
 		super.onCreate();
