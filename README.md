@@ -4,6 +4,10 @@ TODO:
 - more maps
 - leaderboard
 - reward for win + profiles
+- speed 1.1 on enemy in 5,6,7,..
+- stroke on players+enemies to better see
+- player layer above enemy layer
+- bigger enemy more in background
 
 ```sh
 # Machine setup

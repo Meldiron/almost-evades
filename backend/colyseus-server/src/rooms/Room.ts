@@ -152,13 +152,13 @@ export abstract class GameRoom extends Room<RoomState> {
 				if(collision.collide) {
 					player.isDead = false;
 					if (player.client) {
-						player.client.auth.session.isDead = true;
+						player.client.auth.session.isDead = false;
 						await AppwriteService.updateSession(player.client.auth.session);
 					}
 
 					player2.isDead = false;
 					if (player2.client) {
-						player.client.auth.session.isDead = true;
+						player.client.auth.session.isDead = false;
 						await AppwriteService.updateSession(player.client.auth.session);
 					}
 				}
