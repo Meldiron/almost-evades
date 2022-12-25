@@ -1,9 +1,9 @@
 TODO:
-- make nickname more readable in canvas
-- more enemies
 - upgrades
-- main map
+- abilities
 - more maps
+- leaderboard
+- reward for win + profiles
 
 ```sh
 # Machine setup

@@ -10,6 +10,7 @@
 		await AppwriteService.logout();
 		profileStore.set(null);
 		accountStore.set(null);
+		localStorage.removeItem('sessionId');
 	}
 </script>
 

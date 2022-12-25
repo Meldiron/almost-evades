@@ -279,7 +279,9 @@
 				const nicknameCtx = add([
 					'destroyable',
 					text(player.nickname, {
-						size: 12
+						size: 16,
+						font: "apl386",
+						letterSpacing: -2
 					}),
 					color(0, 0, 0),
 					pos(player.x, player.y - 16),
@@ -321,10 +323,15 @@
 	}
 
 	let chatMsg = '';
-	function onSubmitMessage() {
+	async function onSubmitMessage() {
 		if (chatMsg === '/r') {
 			sendAction('restart');
 		} else if (chatMsg === '/l') {
+			await gameRoom.leave();
+			await lobbyRoom.leave();
+			localStorage.removeItem('sessionId');
+			goto('/');
+		} else if (chatMsg === '/revive') {
 			sendAction('revive');
 		} else {
 			lobbyRoom.send('sendMessage', { msg: chatMsg });

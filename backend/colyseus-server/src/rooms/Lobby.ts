@@ -65,6 +65,6 @@ export class Lobby extends Room {
 	}
 
 	onJoin(client: Client, options?: any, auth?: any): void | Promise<any> {
-		client.send('chatMessage', { nickname: 'SYSTEM', msg: 'Type /r to restart.' });
+		client.send('chatMessage', { nickname: 'SYSTEM', msg: 'Type /r to restart or /l to leave.' });
 	}
 }
