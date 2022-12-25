@@ -19,6 +19,17 @@
 	let levelName = '';
 
 	let messages: any = [];
+	async function addMessage(data: any) {
+		messages.push(data);
+		messages = messages;
+
+		await tick();
+
+		setTimeout(() => {
+			const chatDiv = document.getElementById('chat') as HTMLElement;
+			chatDiv.scrollTop = chatDiv.scrollHeight;
+		}, 1);
+	}
 
 	onMount(async () => {
 		if (!browser) {
@@ -58,15 +69,7 @@
 		});
 
 		lobbyRoom.onMessage('chatMessage', async (data: any) => {
-			messages.push(data);
-			messages = messages;
-
-			await tick();
-
-			setTimeout(() => {
-				const chatDiv = document.getElementById('chat') as HTMLElement;
-				chatDiv.scrollTop = chatDiv.scrollHeight;
-			}, 1);
+			addMessage(data);
 		});
 
 		lobbyRoom.onMessage(
@@ -101,6 +104,10 @@
 		destroyAll('destroyable');
 
 		initState();
+
+		gameRoom.onMessage('chatMessage', async (data: any) => {
+			addMessage(data);
+		});
 
 		gameRoom.onMessage('restartResponse', async () => {
 			await lobbyRoom.leave();
