@@ -22,6 +22,34 @@
                     "array": false,
                     "size": 32,
                     "default": null
+                },
+                {
+                    "key": "skinId",
+                    "type": "string",
+                    "status": "available",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null
+                },
+                {
+                    "key": "mapWins",
+                    "type": "string",
+                    "status": "available",
+                    "required": true,
+                    "array": false,
+                    "size": 100000,
+                    "default": null
+                },
+                {
+                    "key": "vps",
+                    "type": "integer",
+                    "status": "available",
+                    "required": true,
+                    "array": false,
+                    "min": -9223372036854775808,
+                    "max": 9223372036854775807,
+                    "default": null
                 }
             ],
             "indexes": [

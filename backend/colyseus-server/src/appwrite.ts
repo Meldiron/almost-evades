@@ -4,6 +4,9 @@ const apiKey = process.env.APPWRITE_API_KEY;
 
 export type Profile = Models.Document & {
 	nickname: string;
+	vps: number;
+	skinId: string;
+	mapWins: string;
 };
 
 export type Session = Models.Document & {
@@ -71,5 +74,25 @@ export const AppwriteService = {
 		delete session['$createdAt'];
 		delete session['$permissions'];
 		return await databases.updateDocument<Session>('default', 'sessions', session.$id, session);
+	},
+	addVp: async (userId: string, amount: number) => {
+		const profile = await AppwriteService.getProfile(userId);
+		await databases.updateDocument<Profile>('default', 'profiles', userId, {
+			vps: profile.vps + amount
+		});
+	},
+	addMapWin: async (userId: string, mapId: string) => {
+		const profile = await AppwriteService.getProfile(userId);
+		const wins = JSON.parse(profile.mapWins);
+
+		if(!wins[mapId]) {
+			wins[mapId] = 0;
+		}
+
+		wins[mapId]++;
+
+		await databases.updateDocument<Profile>('default', 'profiles', userId, {
+			mapWins: JSON.stringify(wins)
+		});
 	}
 };

@@ -55,7 +55,10 @@ module.exports = async function (req, res) {
 			'profiles',
 			userId,
 			{
-				nickname
+				nickname,
+				vps: 0,
+				skinId: 'default',
+				mapWins: '{}'
 			},
 			[sdk.Permission.update(sdk.Role.user(userId))]
 		);
