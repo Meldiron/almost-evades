@@ -11,6 +11,9 @@ TODO:
 - Cannot kill on spawn
 - claim anonymous account
 - Dont disconenct from lobby on /r
+- circle with circle collision
+- disablee speedup on spawn
+- in-game table of players
 
 ```sh
 # Machine setup

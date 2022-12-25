@@ -64,6 +64,7 @@ export abstract class GameRoom extends Room<RoomState> {
 			client.send('restartResponse');
 		});
 
+		/*
 		this.onMessage('cheatRevive', async (client: Client) => {
 			const player = this.state.players.get(client.sessionId);
 			player.isDead = false;
@@ -94,6 +95,7 @@ export abstract class GameRoom extends Room<RoomState> {
 			await AppwriteService.updateSession(client.auth.session);
 			client.send('goToRoom', { roomId: data.roomId });
 		});
+		*/
 	}
 
 	onJoin(client: Client) {
