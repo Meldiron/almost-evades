@@ -1,10 +1,7 @@
 TODO:
-- Max 1 session per player
 - make nickname more readable in canvas
-- chat
-- enemy
-- upgrades
 - more enemies
+- upgrades
 - main map
 - more maps
 

@@ -1,7 +1,9 @@
 import { Schema, type, MapSchema } from '@colyseus/schema';
 import { Client } from 'colyseus';
+import { AppwriteService } from '../../appwrite';
 import { CollideUtils } from '../../collideUtils';
-import { sessions } from '../Room';
+import { RoomRegistry } from '../../roomRegistry';
+import { RegistryData } from '../Room';
 
 export class Player extends Schema {
 	@type('number')
@@ -40,6 +42,9 @@ export class Player extends Schema {
 	@type('number')
 	colorB = 0;
 
+	lastSync = 0;
+	isZombie = false;
+
 	constructor(
 		private room: RoomState,
 		isEnemy: boolean,
@@ -69,8 +74,8 @@ export class Player extends Schema {
 		this.colorB = color[2];
 	}
 
-	update(deltaTime: number) {
-		if (this.isDead) {
+	async update(deltaTime: number) {
+		if (this.isDead || this.isZombie) {
 			return;
 		}
 
@@ -113,15 +118,14 @@ export class Player extends Schema {
 			collisionObject.x = collisionLeft.x;
 			collisionObject.y = collisionLeft.y;
 
-			if (this.client && this.room.previousLevel) {
-				const sessionId = this.client.auth.sessionId;
-				sessions[sessionId].lastLevel = this.room.id;
-				sessions[sessionId].isSlow = this.isSlow;
-				sessions[sessionId].directionX = this.directionX;
-				sessions[sessionId].directionY = this.directionY;
-				sessions[sessionId].x = undefined;
-				sessions[sessionId].y = undefined;
-				this.client.send('goToRoom', { room: this.room.previousLevel });
+			if (this.client && this.room.registry.previous) {
+				this.isZombie = true;
+				const roomData = RoomRegistry.get(this.room.registry.previous);
+				this.client.auth.session.roomId = this.room.registry.previous;
+				this.client.auth.session.x = (roomData.width - 4) * 32;
+				this.client.auth.session.y = Math.floor(roomData.height / 2) * 32;
+				await AppwriteService.updateSession(this.client.auth.session);
+				this.client.send('goToRoom', { roomId: this.room.registry.previous });
 				return;
 			}
 
@@ -140,15 +144,14 @@ export class Player extends Schema {
 			collisionObject.x = collisionRight.x;
 			collisionObject.y = collisionRight.y;
 
-			if (this.client && this.room.nextLevel) {
-				const sessionId = this.client.auth.sessionId;
-				sessions[sessionId].lastLevel = this.room.id;
-				sessions[sessionId].isSlow = this.isSlow;
-				sessions[sessionId].directionX = this.directionX;
-				sessions[sessionId].directionY = this.directionY;
-				sessions[sessionId].x = undefined;
-				sessions[sessionId].y = undefined;
-				this.client.send('goToRoom', { room: this.room.nextLevel });
+			if (this.client && this.room.registry.next) {
+				this.isZombie = true;
+				const roomData = RoomRegistry.get(this.room.registry.next);
+				this.client.auth.session.roomId = this.room.registry.next;
+				this.client.auth.session.x = 4 * 32;
+				this.client.auth.session.y = Math.floor(roomData.height / 2) * 32;
+				await AppwriteService.updateSession(this.client.auth.session);
+				this.client.send('goToRoom', { roomId: this.room.registry.next });
 				return;
 			}
 
@@ -191,9 +194,13 @@ export class Player extends Schema {
 		this.y = collisionObject.y;
 
 		if (this.client) {
-			const sessionId = this.client.auth.sessionId;
-			sessions[sessionId].x = this.x;
-			sessions[sessionId].y = this.y;
+			this.client.auth.session.x = this.x;
+			this.client.auth.session.y = this.y;
+
+			if(Math.abs(this.lastSync - Date.now()) > 5000) {
+				this.lastSync = Date.now();
+				AppwriteService.updateSession(this.client.auth.session);
+			}
 		}
 	}
 }
@@ -214,28 +221,13 @@ export class RoomState extends Schema {
 	@type('boolean')
 	isWin = false;
 
-	constructor(
-		public id: string,
-		name: string,
-		height: number,
-		width: number,
-		public previousLevel: string,
-		public nextLevel: string,
-		isWin: boolean = false,
-		public isFirst: boolean = false
-	) {
+	constructor(public registry: RegistryData) {
 		super();
 
-		this.name = name;
-		this.height = height;
-		this.width = width;
-		this.isWin = isWin;
-
-		if (width % 4 !== 0) {
-			throw new Error('Width must be multiply of 4.');
-		} else if (height % 4 !== 0) {
-			throw new Error('Height must be multiply of 4.');
-		}
+		this.name = registry.name;
+		this.width = registry.width;
+		this.height = registry.height;
+		this.isWin = registry.isWin;
 	}
 
 	createEnemy(
@@ -255,36 +247,15 @@ export class RoomState extends Schema {
 	}
 
 	createPlayer(client: Client) {
-		let x = 32 * 4;
-		let y = 32 * Math.floor(this.height / 2);
-
-		const sessionId = client.auth.sessionId;
-		if (sessions[sessionId].lastLevel === this.nextLevel) {
-			x = 32 * (this.width - 4);
-		}
-
-		sessions[sessionId].currentLevel = this.id;
-
-		if (sessions[sessionId].x) {
-			x = sessions[sessionId].x;
-		}
-
-		if (sessions[sessionId].y) {
-			y = sessions[sessionId].y;
-		}
-
-		const nickname = client.auth.profile.nickname;
-		const isSlow = sessions[sessionId].isSlow;
-		const directionX = sessions[sessionId].directionX;
-		const directionY = sessions[sessionId].directionY;
-		const isDead = sessions[sessionId].isDead;
+		const nickname = client.auth.session.nickname;
+		const x = client.auth.session.x;
+		const y = client.auth.session.y;
+		const isDead = client.auth.session.isDead;
 
 		this.players.set(
 			client.sessionId,
-			new Player(this, false, nickname, isSlow, directionX, directionY, x, y, isDead, [255, 0, 0], client)
+			new Player(this, false, nickname, false, 'none', 'none', x, y, isDead, [255, 0, 0], client)
 		);
-
-		client.send('sessionId', { sessionId });
 	}
 
 	removePlayer(client: Client) {

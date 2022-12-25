@@ -10,9 +10,9 @@ dotenv.config();
  * Import your Room files
  */
 import { myFirstJourney001 } from "./rooms/myFirstJourney001";
+import { Lobby } from "./rooms/Lobby";
+import { RoomRegistry } from "./roomRegistry";
 import { myFirstJourney002 } from "./rooms/myFirstJourney002";
-import { myFirstJourney003 } from "./rooms/myFirstJourney003";
-import { myFirstJourney004 } from "./rooms/myFirstJourney004";
 
 export default Arena({
     getId: () => "Almost Evades",
@@ -21,10 +21,13 @@ export default Arena({
         /**
          * Define your room handlers:
          */
-        gameServer.define('myFirstJourney001', myFirstJourney001);
-        gameServer.define('myFirstJourney002', myFirstJourney002);
-        gameServer.define('myFirstJourney003', myFirstJourney003);
-        gameServer.define('myFirstJourney004', myFirstJourney004);
+        gameServer.define('Lobby', Lobby);
+
+        gameServer.define(new myFirstJourney001().getRegistryData().id, myFirstJourney001);
+        RoomRegistry.register(new myFirstJourney001().getRegistryData().id, new myFirstJourney001().getRegistryData());
+
+        gameServer.define(new myFirstJourney002().getRegistryData().id, myFirstJourney002);
+        RoomRegistry.register(new myFirstJourney002().getRegistryData().id, new myFirstJourney002().getRegistryData());
 
     },
 
@@ -41,11 +44,12 @@ export default Arena({
          * It is recommended to protect this route with a password.
          * Read more: https://docs.colyseus.io/tools/monitor/
          */
+        const users: any = {};
+        users[process.env.ADMIN_USER];
+        users[process.env.ADMIN_PASSWORD];
         const basicAuthMiddleware = basicAuth({
             // list of users and passwords
-            users: {
-                "almostAdmin": "almostAdmin", // TODO: Set from ENV var
-            },
+            users,
             // sends WWW-Authenticate header, which will prompt the user to fill
             // credentials in
             challenge: true

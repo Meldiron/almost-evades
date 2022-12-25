@@ -4,50 +4,41 @@ import { CollideUtils } from '../collideUtils';
 import { Player } from './schema/RoomState';
 import { RoomState } from './schema/RoomState';
 
-// TODO: Cleanup
+export type RegistryData = {
+	id: string,
+	name: string,
+	width: number,
+	height: number,
+	previous: string,
+	next: string,
+	isWin: boolean
+};
 
-export const sessions: any = {};
-export const users: any = {};
+export abstract class GameRoom extends Room<RoomState> {
+	abstract getRegistryData(): RegistryData;
 
-export class GameRoom extends Room<RoomState> {
-	async onAuth(client: Client, options: { jwt: string, sessionId: string }) {
-		if(!options.sessionId) {
-			const account = await AppwriteService.getAccount(options.jwt);
+	async onAuth(client: Client, options: { sessionId: string }) {
+		const session = await AppwriteService.getSession(options.sessionId);
+		const roomRegistry = this.getRegistryData();
 
-			if(users[account.$id]) {
-				const session = sessions[users[account.$id]];
-				if(session.currentLevel) {
-					session.isSlow = false;
-					session.directionX = "none";
-					session.directionY = "none";
-					client.send('goToRoom', { room: session.currentLevel });
-				}
-
-				return session;
-			}
-
-			const [user, profile] = await Promise.all([
-				AppwriteService.getUser(account.$id),
-				AppwriteService.getProfile(account.$id)
-			]);
-
-			const sessionId = crypto.randomUUID();
-
-			sessions[sessionId] = { user, profile, sessionId };
-			users[user.$id] = sessionId;
-
-			if(!this.state.isFirst) {
-				client.send('goToRoom', { room: this.state.id.slice(0, -3) + '001' });
-			}
-
-			return sessions[sessionId];
-		} else {
-			return sessions[options.sessionId];
+		if(roomRegistry.id !== session.roomId) {
+			return false;
 		}
+
+		if(session.isActive) {
+			return false;
+		}
+
+		session.isActive = true;
+
+		await AppwriteService.updateSession(session);
+
+		return {session};
 	}
 
 	onCreate() {
 		this.maxClients = 100;
+
 		this.setSimulationInterval((deltaTime) => this.update(deltaTime));
 
 		this.onMessage('move', (client: Client, data: { direction: string }) => {
@@ -66,12 +57,10 @@ export class GameRoom extends Room<RoomState> {
 			this.state.setSlow(client, false);
 		});
 
-		this.onMessage('restart', (client: Client) => {
-			const sessionId = client.auth.sessionId;
-			delete sessions[sessionId];
-			delete users[client.auth.user.$id];
-			this.state.removePlayer(client);
-			client.leave();
+		this.onMessage('restart', async (client: Client) => {
+			client.auth.session.isActive = false;
+			await AppwriteService.updateSession(client.auth.session);
+			client.send('restartResponse');
 		});
 	}
 
@@ -79,8 +68,11 @@ export class GameRoom extends Room<RoomState> {
 		this.state.createPlayer(client);
 	}
 
-	onLeave(client: Client) {
+	async onLeave(client: Client) {
 		this.state.removePlayer(client);
+
+		client.auth.session.isActive = false;
+		await AppwriteService.updateSession(client.auth.session);
 	}
 
 	update(deltaTime: number) {
@@ -95,7 +87,7 @@ export class GameRoom extends Room<RoomState> {
 				return;
 			}
 
-			this.state.players.forEach((enemy) => {
+			this.state.players.forEach(async (enemy) => {
 				if(!enemy.isEnemy) {
 					return;
 				}
@@ -114,8 +106,8 @@ export class GameRoom extends Room<RoomState> {
 					player.isDead = true;
 
 					if (player.client) {
-						const sessionId = player.client.auth.sessionId;
-						sessions[sessionId].isDead = true;
+						player.client.auth.session.isDead = true;
+						await AppwriteService.updateSession(player.client.auth.session);
 					}
 				}
 			});
@@ -127,7 +119,7 @@ export class GameRoom extends Room<RoomState> {
 				return;
 			}
 
-			this.state.players.forEach((player2) => {
+			this.state.players.forEach(async (player2) => {
 				if(player2.isEnemy) {
 					return;
 				}
@@ -153,14 +145,14 @@ export class GameRoom extends Room<RoomState> {
 				if(collision.collide) {
 					player.isDead = false;
 					if (player.client) {
-						const sessionId = player.client.auth.sessionId;
-						sessions[sessionId].isDead = false;
+						player.client.auth.session.isDead = true;
+						await AppwriteService.updateSession(player.client.auth.session);
 					}
 
 					player2.isDead = false;
 					if (player2.client) {
-						const sessionId = player2.client.auth.sessionId;
-						sessions[sessionId].isDead = false;
+						player.client.auth.session.isDead = true;
+						await AppwriteService.updateSession(player.client.auth.session);
 					}
 				}
 			});

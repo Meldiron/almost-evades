@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { accountStore, profileStore } from '$lib/stores';
 	import Layout from '$lib/components/layout.svelte';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { ColyseusService } from '$lib/colyseus';
 
 	import { page } from '$app/stores';
@@ -11,11 +11,14 @@
 	import { browser } from '$app/environment';
 
 	let colyseus: any = null;
-	let room: any = null;
+	let lobbyRoom: any = null;
+	let gameRoom: any = null;
+
 	let ctx: any = null;
 	const players: any = {};
 	let levelName = '';
-	let sessionId = '';
+
+	let messages: any = [];
 
 	onMount(async () => {
 		if (!browser) {
@@ -26,8 +29,6 @@
 			goto('/');
 			return;
 		}
-
-		const { map, server } = $page.params;
 
 		ctx = kaboom({
 			root: document.getElementById('game') as HTMLElement,
@@ -40,14 +41,48 @@
 
 		await loadSprite('tiles', '/tiles.png');
 
+		await goToLobby();
+	});
+
+	async function goToLobby() {
+		const { map, server } = $page.params;
+
 		colyseus = new ColyseusService(server);
 
-		goToRoom({ room: map });
-	});
+		lobbyRoom = await colyseus.joinLobby(map);
+
+		lobbyRoom.onLeave((code: any) => {
+			if (code !== 1000) {
+				Swal.fire('Error!', 'You got disconnect. Please reload the website.', 'error');
+			}
+		});
+
+		lobbyRoom.onMessage('chatMessage', async (data: any) => {
+			messages.push(data);
+			messages = messages;
+
+			await tick();
+
+			setTimeout(() => {
+				const chatDiv = document.getElementById('chat') as HTMLElement;
+				chatDiv.scrollTop = chatDiv.scrollHeight;
+			}, 1);
+		});
+
+		lobbyRoom.onMessage(
+			'getAuthDataResponse',
+			async (data: { roomId: string; sessionId: string }) => {
+				localStorage.setItem('sessionId', data.sessionId);
+				goToRoom({ roomId: data.roomId });
+			}
+		);
+
+		lobbyRoom.send('getAuthData');
+	}
 
 	let switchingRooms = false;
 	let actionsWileSwitching: any[] = [];
-	async function goToRoom(data: { room: string }) {
+	async function goToRoom(data: { roomId: string }) {
 		if (switchingRooms) {
 			return;
 		}
@@ -55,11 +90,11 @@
 		actionsWileSwitching = [];
 		switchingRooms = true;
 
-		if (room) {
-			await room.leave();
+		if (gameRoom) {
+			await gameRoom.leave();
 		}
 
-		room = await colyseus.playLevel(data.room, { sessionId });
+		gameRoom = await colyseus.joinRoom(data.roomId);
 
 		didInit = false;
 
@@ -67,14 +102,20 @@
 
 		initState();
 
-		room.state.onChange = () => {
-			initCanvas(room.state);
+		gameRoom.onMessage('restartResponse', async () => {
+			await lobbyRoom.leave();
+			localStorage.removeItem('sessionId');
+			goToLobby();
+		});
+
+		gameRoom.state.onChange = () => {
+			initCanvas(gameRoom.state);
 		};
 
 		switchingRooms = false;
 
 		actionsWileSwitching.forEach((a) => {
-			room.send(a.name, a.data);
+			gameRoom.send(a.name, a.data);
 		});
 
 		actionsWileSwitching = [];
@@ -105,7 +146,7 @@
 					return;
 				}
 
-				if(event.keyCode === 80) {
+				if (event.keyCode === 80) {
 					sendAction('restart');
 					return;
 				}
@@ -138,7 +179,7 @@
 					const pos = vec2(lerp(ctx.pos.x, ctx.serverX, 0.3), lerp(ctx.pos.y, ctx.serverY, 0.3));
 					ctx.moveTo(pos);
 
-					if(ctx.nicknameCtx) {
+					if (ctx.nicknameCtx) {
 						ctx.nicknameCtx.moveTo(vec2(pos.x, pos.y - 28));
 					}
 
@@ -204,25 +245,21 @@
 	}
 
 	async function initState() {
-		room.onError((code: any, message: any) => {
+		gameRoom.onError((code: any, message: any) => {
 			Swal.fire('Error!', message, 'error');
 		});
 
-		room.onLeave((code: any) => {
+		gameRoom.onLeave((code: any) => {
 			if (code !== 1000) {
 				Swal.fire('Error!', 'You got disconnect. Please reload the website.', 'error');
 			}
 		});
 
-		room.onMessage('goToRoom', (data: any) => {
+		gameRoom.onMessage('goToRoom', (data: any) => {
 			goToRoom(data);
 		});
 
-		room.onMessage('sessionId', (data: any) => {
-			sessionId = data.sessionId;
-		});
-
-		room.state.players.onAdd = (player: any, sessionId: any) => {
+		gameRoom.state.players.onAdd = (player: any, sessionId: any) => {
 			const playerComponents = [
 				'destroyable',
 				'movable',
@@ -231,7 +268,7 @@
 				origin('center'),
 				opacity(player.isDead ? 0.5 : 1),
 				color(player.colorR, player.colorG, player.colorB),
-				{ self: sessionId === room.sessionId },
+				{ self: sessionId === gameRoom.sessionId },
 				{
 					serverX: player.x,
 					serverY: player.y
@@ -266,8 +303,8 @@
 			};
 		};
 
-		room.state.players.onRemove = (player: any, sessionId: any) => {
-			if(players[sessionId].ctx.nicknameCtx) {
+		gameRoom.state.players.onRemove = (player: any, sessionId: any) => {
+			if (players[sessionId].ctx.nicknameCtx) {
 				players[sessionId].ctx.nicknameCtx.destroy();
 			}
 			players[sessionId].ctx.destroy();
@@ -279,8 +316,23 @@
 		if (switchingRooms) {
 			actionsWileSwitching.push({ name, data });
 		} else {
-			room.send(name, data);
+			gameRoom.send(name, data);
 		}
+	}
+
+	let chatMsg = '';
+	function onSubmitMessage() {
+		if (chatMsg === '/r') {
+			sendAction('restart');
+		} else {
+			lobbyRoom.send('sendMessage', { msg: chatMsg });
+		}
+
+		chatMsg = '';
+	}
+
+	function onInput(e: any) {
+		e.stopPropagation();
 	}
 </script>
 
@@ -297,8 +349,27 @@
 	{/if}
 </div>
 
+<div class="fixed left-4 top-4 w-[300px] z-[110]">
+	<div id="chat" class="h-[200px] overflow-auto text-white bg-black p-3 rounded-t-md">
+		{#each messages as message}
+			<p><span class="text-slate-500">{message.nickname}: </span>{message.msg}</p>
+		{/each}
+	</div>
+	<form on:submit|preventDefault={onSubmitMessage}>
+		<input
+			on:keydown={onInput}
+			on:keyup={onInput}
+			bind:value={chatMsg}
+			type="text"
+			class="w-full bg-white rounded-b-md p-2"
+			placeholder="Press enter to chat"
+		/>
+		<button type="button" class="hidden" />
+	</form>
+</div>
+
 <Layout>
-	{#if !room}
+	{#if !gameRoom}
 		<p class="text-center">Connecting to server ...</p>
 	{/if}
 </Layout>

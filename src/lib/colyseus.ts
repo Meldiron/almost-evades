@@ -9,6 +9,8 @@ export class ColyseusService {
 	constructor(hostname: string) {
 		this.client = new Colyseus.Client((hostname.includes('localhost') ? 'ws' : 'wss') + '://' + hostname);
 
+		console.log(this.client);
+
 		const jwt = localStorage.getItem('jwt');
 		if (jwt) {
 			const obj = JSON.parse(jwt);
@@ -44,10 +46,17 @@ export class ColyseusService {
 		return this.jwt;
 	}
 
-	async playLevel(name: string, data: any = {}) {
+	async joinLobby(desiredRoomId: string) {
+		return await this.client.joinOrCreate('Lobby', {
+			jwt: await this.getJwt(),
+			sessionId: localStorage.getItem('sessionId') ?? '',
+			desiredRoomId
+		})
+	}
+
+	async joinRoom(name: string) {
 		return await this.client.joinOrCreate(name, {
-			...data,
-			jwt: await this.getJwt()
+			sessionId: localStorage.getItem('sessionId') ?? ''
 		});
 	}
 }
