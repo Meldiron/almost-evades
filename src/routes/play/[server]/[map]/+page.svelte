@@ -332,7 +332,9 @@
 			localStorage.removeItem('sessionId');
 			goto('/');
 		} else if (chatMsg === '/revive') {
-			sendAction('revive');
+			sendAction('cheatRevive');
+		} else if (chatMsg.startsWith('/level')) {
+			sendAction('cheatLevel' , { roomId: chatMsg.split(' ')[1] });
 		} else {
 			lobbyRoom.send('sendMessage', { msg: chatMsg });
 		}

@@ -1,6 +1,7 @@
 import { Room, Client } from 'colyseus';
 import { AppwriteService } from '../appwrite';
 import { CollideUtils } from '../collideUtils';
+import { RoomRegistry } from '../roomRegistry';
 import { Player } from './schema/RoomState';
 import { RoomState } from './schema/RoomState';
 
@@ -63,11 +64,23 @@ export abstract class GameRoom extends Room<RoomState> {
 			client.send('restartResponse');
 		});
 
-		this.onMessage('revive', async (client: Client) => {
+		this.onMessage('cheatRevive', async (client: Client) => {
 			const player = this.state.players.get(client.sessionId);
 			player.isDead = false;
 			player.client.auth.session.isDead = false;
 			await AppwriteService.updateSession(player.client.auth.session);
+		});
+
+		this.onMessage('cheatLevel', async (client: Client, data: { roomId: string }) => {
+			const player = this.state.players.get(client.sessionId);
+
+			player.isZombie = true;
+			const roomData = RoomRegistry.get(data.roomId);
+			client.auth.session.roomId = data.roomId;
+			client.auth.session.x = (roomData.width - 4) * 32;
+			client.auth.session.y = Math.floor(roomData.height / 2) * 32;
+			await AppwriteService.updateSession(client.auth.session);
+			client.send('goToRoom', { roomId: data.roomId });
 		});
 	}
 

@@ -19,7 +19,11 @@ export class AA6 extends GameRoom {
 		this.setState(new RoomState(this.getRegistryData()));
 
 		for (let i = 0; i < 10; i++) {
-			GameUtils.addNormalEnemy(this.state, this.getRegistryData(), { speed: 1 });
+			GameUtils.addNormalEnemy(this.state, this.getRegistryData(), { speed: 1.1 });
+		}
+
+		for (let i = 0; i < 5; i++) {
+			GameUtils.addNormalEnemy(this.state, this.getRegistryData(), { speed: 1.1, radius: 16 });
 		}
 
 		super.onCreate();

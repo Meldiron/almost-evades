@@ -8,6 +8,7 @@ TODO:
 - stroke on players+enemies to better see
 - player layer above enemy layer
 - bigger enemy more in background
+- Cannot kill on spawn
 
 ```sh
 # Machine setup
