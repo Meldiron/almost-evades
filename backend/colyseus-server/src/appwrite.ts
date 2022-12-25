@@ -1,5 +1,4 @@
-import { ID } from 'appwrite';
-import { Account, Client, Users, Databases, Models, Query } from 'node-appwrite';
+import { ID, Account, Client, Users, Databases, Models, Query } from 'node-appwrite';
 
 const apiKey = process.env.APPWRITE_API_KEY;
 
