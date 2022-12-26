@@ -2,17 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { profileStore } from '$lib/stores';
 	import Card from '$lib/components/card.svelte';
-	import { dev } from '$app/environment';
-
-	const maps = {
-		AngelicAlley001: 'Angelic Alley (Easy)'
-	};
-
-	const servers = dev ? {
-        'localhost:3000': 'Development'
-    } : {
-		'eu1.evades.almostapps.eu': 'EU #1'
-	};
+	import { maps, servers } from '$lib/data';
 
 	let map = Object.keys(maps)[0];
 	let server = Object.keys(servers)[0];
@@ -23,10 +13,12 @@
 </script>
 
 <Card>
-	<h1 class="text-black font-bold text-2xl">Ready to Play?</h1>
-	<p class="text-slate-500">
-		Welcome {$profileStore?.nickname ?? 'Guest'} 👋
-	</p>
+	<div>
+		<h1 class="text-black font-bold text-2xl">Ready to Play?</h1>
+		<p class="text-slate-500">
+			Welcome {$profileStore?.nickname ?? 'Guest'} 👋
+		</p>
+	</div>
 
 	<form on:submit|preventDefault={play} class="flex flex-col space-y-2">
 		<p class="text-black">Server:</p>

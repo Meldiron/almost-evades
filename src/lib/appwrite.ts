@@ -1,8 +1,11 @@
 import { browser } from '$app/environment';
-import { Account, Client, Databases, Functions, ID, type Models } from 'appwrite';
+import { Account, Client, Databases, Functions, ID, Query, type Models } from 'appwrite';
 
 export type Profile = Models.Document & {
 	nickname: string;
+	vps: number;
+	skinId: string;
+	mapWins: string;
 };
 
 const client = new Client();
@@ -12,7 +15,6 @@ client.setEndpoint('https://backend.evades.almostapps.eu/v1').setProject('almost
 const account = new Account(client);
 const functions = new Functions(client);
 const databases = new Databases(client);
-
 
 if (browser) {
 	window.addEventListener('unhandledrejection', function (event) {
@@ -45,6 +47,12 @@ export const AppwriteService = {
 	},
 	getProfile: async (userId: string) => {
 		return await databases.getDocument<Profile>('default', 'profiles', userId);
+	},
+	getHallOfFame: async () => {
+		return await databases.listDocuments<Profile>('default', 'profiles', [
+			Query.limit(25),
+			Query.orderDesc('vps')
+		]);
 	},
 	createProfile: async (nickname: string) => {
 		const execution = await functions.createExecution(

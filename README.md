@@ -114,8 +114,6 @@ When contributing to backend-related logic, make sure to sync-up `backend/appwri
 ## 🏗️ TODOs
 
 - if dead, red in leaderboard
-- profiles page
-- profiles leaderboard (VPs)
 - claim anonymous account
 - circle with circle collision
 - upgrades

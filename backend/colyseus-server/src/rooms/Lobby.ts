@@ -22,7 +22,7 @@ export class Lobby extends Room<LobbyState> {
 				AppwriteService.getProfile(account.$id)
 			]);
 
-			const roomId = options.desiredRoomId.endsWith('001') ? options.desiredRoomId : (options.desiredRoomId.slice(0, -3) + '001');
+			const roomId = options.desiredRoomId  + '001';
 	
 			const roomData = RoomRegistry.get(roomId);
 

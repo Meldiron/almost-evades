@@ -1,35 +1,25 @@
-<script>
-	import { AppwriteService } from '$lib/appwrite';
+<script lang="ts">
 	import { accountStore, profileStore } from '$lib/stores';
 	import Auth from './auth.svelte';
 	import Layout from '$lib/components/layout.svelte';
 	import Onboard from './onboard.svelte';
 	import Play from './play.svelte';
+	import HallOfFame from './hall-of-fame.svelte';
 
-	async function logout() {
-		await AppwriteService.logout();
-		profileStore.set(null);
-		accountStore.set(null);
-		localStorage.removeItem('sessionId');
-	}
+	import type { PageData } from './$types';
+
+	export let data: PageData;
 </script>
 
 <Layout>
-	<h1 class="text-cyan-500 font-bold text-4xl text-center mb-12">Almost Evades</h1>
-
 	{#if $accountStore === null}
 		<Auth />
+	{:else if $profileStore === null}
+		<Onboard />
 	{:else}
-		{#if $profileStore === null}
-			<Onboard />
-		{:else}
+		<div class="flex flex-col space-y-6">
 			<Play />
-		{/if}
-
-		<div class="flex justify-center mt-12">
-			<button on:click={logout} class="bg-slate-200 text-slate-700 px-6 py-3 rounded-md"
-				>Logout</button
-			>
+			<HallOfFame players={data.hallOfFamePlayers} />
 		</div>
 	{/if}
 </Layout>
