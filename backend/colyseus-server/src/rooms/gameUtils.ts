@@ -21,21 +21,18 @@ export const GameUtils = {
         config.x = getRandom(minX, maxX);
         config.y = getRandom(minY, maxY);
 
-        const directionsX = ['left', 'right'];
-        const directionsY = ['up', 'down'];
-
-        let directionX = directionsX[Math.floor(Math.random() * directionsX.length)];
-        let directionY = directionsY[Math.floor(Math.random() * directionsY.length)];
+        let moveVector = [getRandom(-1, 1), getRandom(-1,1)];
 
         const r = Math.random();
         if(r < 0.15) {
-            directionX = 'none';
+            moveVector[0] = 0;
+            moveVector[1] = Math.random() < 0.5 ? 1 : -1;
         } else if(r < 0.3) {
-            directionY = 'none';
+            moveVector[0] = Math.random() < 0.5 ? 1 : -1;
+            moveVector[1] = 0;
         }
 
-        config.directionX = directionX;
-        config.directionY = directionY;
+        config.moveVector = moveVector;
         config.color = [100,100,100];
 
         state.createEnemy(config);

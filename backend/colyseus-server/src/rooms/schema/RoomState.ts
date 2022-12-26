@@ -5,6 +5,22 @@ import { CollideUtils } from '../../collideUtils';
 import { RoomRegistry } from '../../roomRegistry';
 import { RegistryData } from '../Room';
 
+export class Vector {
+    constructor(public x: number, public y: number) {}
+
+    public magnitude() {
+        return Math.sqrt(this.x * this.x + this.y * this.y);
+    }
+
+    public divide(scalar: number) {
+        return new Vector(this.x / scalar, this.y / scalar);
+    }
+
+    public normalize() {
+        return this.divide(this.magnitude());
+    }
+}
+
 export class Player extends Schema {
 	@type('string')
 	sessionId;
@@ -18,11 +34,11 @@ export class Player extends Schema {
 	@type('string')
 	nickname;
 
-	@type('string')
-	directionX = 'none';
+	@type('number')
+	moveVectorX = 0;
 
-	@type('string')
-	directionY = 'none';
+	@type('number')
+	moveVectorY = 0;
 
 	@type('boolean')
 	isSlow = false;
@@ -57,8 +73,7 @@ export class Player extends Schema {
 		isEnemy: boolean,
 		nickname: string,
 		isSlow: boolean,
-		directionX: string,
-		directionY: string,
+		moveVector: number[],
 		x: number,
 		y: number,
 		isDead: boolean,
@@ -74,8 +89,6 @@ export class Player extends Schema {
 		this.y = y;
 		this.nickname = nickname;
 		this.isSlow = isSlow;
-		this.directionX = directionX;
-		this.directionY = directionY;
 		this.isEnemy = isEnemy;
 		this.isDead = isDead;
 		this.baseSpeed = baseSpeed;
@@ -84,6 +97,20 @@ export class Player extends Schema {
 		this.colorR = color[0];
 		this.colorG = color[1];
 		this.colorB = color[2];
+
+		this.setMoveVector(moveVector);
+	}
+
+	setMoveVector(moveVector: number[]) {
+		if(moveVector[0] === 0 && moveVector[1] === 0) {
+			this.moveVectorX = 0;
+			this.moveVectorY = 0;
+			return;
+		}
+
+		const vector = new Vector(moveVector[0], moveVector[1]).normalize();
+		this.moveVectorX = vector.x;
+		this.moveVectorY = vector.y;
 	}
 
 	async update(deltaTime: number) {
@@ -104,17 +131,8 @@ export class Player extends Schema {
 			speed = baseSpeed / 3;
 		}
 
-		if (this.directionX === 'left') {
-			this.x -= speed;
-		} else if (this.directionX === 'right') {
-			this.x += speed;
-		}
-
-		if (this.directionY === 'up') {
-			this.y -= speed;
-		} else if (this.directionY === 'down') {
-			this.y += speed;
-		}
+		this.x += speed * this.moveVectorX;
+		this.y += speed * this.moveVectorY;
 
 		const collisionObject = {
 			x: this.x,
@@ -143,8 +161,8 @@ export class Player extends Schema {
 				return;
 			}
 
-			if (this.isEnemy && this.directionX === 'left') {
-				this.directionX = 'right';
+			if (this.isEnemy) {
+				this.setMoveVector([-1 * this.moveVectorX, this.moveVectorY]);
 			}
 		}
 
@@ -169,8 +187,8 @@ export class Player extends Schema {
 				return;
 			}
 
-			if (this.isEnemy && this.directionX === 'right') {
-				this.directionX = 'left';
+			if (this.isEnemy) {
+				this.setMoveVector([-1 * this.moveVectorX, this.moveVectorY]);
 			}
 		}
 
@@ -184,8 +202,8 @@ export class Player extends Schema {
 			collisionObject.x = collisionUp.x;
 			collisionObject.y = collisionUp.y;
 
-			if (this.isEnemy && this.directionY === 'up') {
-				this.directionY = 'down';
+			if (this.isEnemy) {
+				this.setMoveVector([this.moveVectorX, -1 * this.moveVectorY]);
 			}
 		}
 
@@ -199,8 +217,8 @@ export class Player extends Schema {
 			collisionObject.x = collisionDown.x;
 			collisionObject.y = collisionDown.y;
 
-			if (this.isEnemy && this.directionY === 'down') {
-				this.directionY = 'up';
+			if (this.isEnemy) {
+				this.setMoveVector([this.moveVectorX, -1 * this.moveVectorY]);
 			}
 		}
 
@@ -253,8 +271,7 @@ export class RoomState extends Schema {
 			speed: number,
 			radius: number,
 			baseSpeed: number,
-			directionX: string,
-			directionY: string,
+			moveVector: number[],
 			x: number,
 			y: number,
 			color: number[]
@@ -264,7 +281,7 @@ export class RoomState extends Schema {
 
 		this.players.set(
 			enemyId,
-			new Player(this, enemyId, true, '', false, config.directionX, config.directionY, config.x, config.y, false, config.color, config.speed, config.radius)
+			new Player(this, enemyId, true, '', false, config.moveVector, config.x, config.y, false, config.color, config.speed, config.radius)
 		);
 	}
 
@@ -277,7 +294,7 @@ export class RoomState extends Schema {
 
 		this.players.set(
 			client.sessionId,
-			new Player(this, sessionId, false, nickname, false, 'none', 'none', x, y, isDead, [255, 0, 0], 1, 16, client)
+			new Player(this, sessionId, false, nickname, false, [0,0], x, y, isDead, [255, 0, 0], 1, 16, client)
 		);
 	}
 
@@ -285,23 +302,7 @@ export class RoomState extends Schema {
 		this.players.delete(client.sessionId);
 	}
 
-	setDirection(client: Client, direction: string) {
-		if (direction === 'up' || direction === 'down') {
-			this.players.get(client.sessionId).directionY = direction;
-		} else if (direction === 'left' || direction === 'right') {
-			this.players.get(client.sessionId).directionX = direction;
-		}
-	}
-
-	endDirection(client: Client, direction: string) {
-		if (direction === 'up' || direction === 'down') {
-			if (this.players.get(client.sessionId).directionY === direction) {
-				this.players.get(client.sessionId).directionY = 'none';
-			}
-		} else if (direction === 'left' || direction === 'right') {
-			if (this.players.get(client.sessionId).directionX === direction) {
-				this.players.get(client.sessionId).directionX = 'none';
-			}
-		}
+	setMoveVector(client: Client, vector: number[]) {
+		this.players.get(client.sessionId).setMoveVector(vector);
 	}
 }

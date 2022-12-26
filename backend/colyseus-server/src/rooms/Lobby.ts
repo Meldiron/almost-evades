@@ -70,6 +70,12 @@ export class Lobby extends Room<LobbyState> {
 		this.onMessage('getAuthData', (client: Client) => {
 			client.send('getAuthDataResponse', { roomId: client.auth.session.roomId, sessionId: client.auth.session.$id });
 		});
+
+		// Join room
+		this.onMessage('fetchSession', async (client: Client) => {
+			client.auth.session = await AppwriteService.getSession(client.auth.session.$id);
+			this.state.setIsDead(client, client.auth.session.isDead);
+		});
 	}
 
 	onJoin(client: Client) {

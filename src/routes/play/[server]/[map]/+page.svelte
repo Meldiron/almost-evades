@@ -176,6 +176,7 @@
 
 	let didInit = false;
 	let didInitOnce = false;
+	let moveVector = [0,0];
 	async function initCanvas(state: any) {
 		roomName = state.name;
 		roomMaxLevel = state.maxLevel;
@@ -206,13 +207,22 @@
 					return;
 				}
 
-				const direction = keyDirections[event.keyCode.toString()];
-
-				if (direction === 'slow') {
+				if(event.keyCode === 16) {
 					sendAction('slow');
-				} else {
-					sendAction('move', { direction });
+					return;
 				}
+
+				if([68,39].includes(event.keyCode)) { // Left
+					moveVector[0] = 1;
+				} else if([65,37].includes(event.keyCode)) { // Right
+					moveVector[0] = -1;
+				} else if([83,40].includes(event.keyCode)) { // Down
+					moveVector[1] = 1;
+				} else if([87,38].includes(event.keyCode)) { // Up
+					moveVector[1] = -1;
+				}
+
+				sendAction('moveVector', { vector: moveVector });
 			});
 
 			window.addEventListener('keyup', (event: any) => {
@@ -220,13 +230,22 @@
 					return;
 				}
 
-				const direction = keyDirections[event.keyCode.toString()];
-
-				if (direction === 'slow') {
+				if(event.keyCode === 16) {
 					sendAction('slowEnd');
-				} else {
-					sendAction('moveEnd', { direction });
+					return;
 				}
+
+				if([68,39].includes(event.keyCode)) { // Left
+					moveVector[0] = moveVector[0] === -1 ? -1 : 0;
+				} else if([65,37].includes(event.keyCode)) { // Right
+					moveVector[0] = moveVector[0] === 1 ? 1 : 0;
+				} else if([83,40].includes(event.keyCode)) { // Down
+					moveVector[1] = moveVector[1] === -1 ? -1 : 0;
+				} else if([87,38].includes(event.keyCode)) { // Up
+					moveVector[1] = moveVector[1] === 1 ? 1 : 0;
+				}
+
+				sendAction('moveVector', { vector: moveVector });
 			});
 
 			onUpdate(() => {
@@ -314,6 +333,10 @@
 			goToRoom(data);
 		});
 
+		gameRoom.onMessage('requestFetchSession', (data: any) => {
+			lobbyRoom.send('fetchSession');
+		});
+
 		gameRoom.state.players.onAdd = (player: any, sessionId: any) => {
 			const playerComponents = [
 				'destroyable',
@@ -322,7 +345,7 @@
 				circle(player.radius),
 				layer(player.isEnemy ? 'enemies' : 'players'),
 				z(1000 - player.radius),
-				outline(2),
+				outline(1),
 				origin('center'),
 				opacity(player.isDead ? 0.5 : 1),
 				color(player.colorR, player.colorG, player.colorB),
@@ -357,7 +380,7 @@
 				state: player
 			};
 
-			player.onChange = function (_changes: any) {
+			player.onChange = async function (_changes: any) {
 				players[sessionId].state = player;
 				playerCtx.serverX = player.x;
 				playerCtx.serverY = player.y;
@@ -455,15 +478,15 @@
 		<div class="h-[200px] overflow-auto text-white bg-black bg-opacity-50 p-3 rounded-md">
 			<h3 class="text-sm uppercase text-center text-gray-200">PLAYERS</h3>
 			{#each Object.entries(leaderboard) as [sessionId, player]}
-				<p>
+				<p class={`${player.state.isDead ? 'text-red-500' : 'text-gray-200'}`}>
 					{#if player.state.level <= roomMaxLevel}
 						{#key leaderboardTick}
-							<span class="text-gray-200 text-xs uppercase"
+							<span class="text-xs uppercase"
 								>[{player.state.level}/{roomMaxLevel}{getPercentage(player.state.sessionId)}]</span
 							>
 						{/key}
 					{:else}
-						<span class="text-gray-200 text-xs uppercase">[WIN]</span>
+						<span class="text-xs uppercase">[WIN]</span>
 					{/if}
 					{player.state.nickname}
 				</p>

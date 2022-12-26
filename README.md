@@ -113,12 +113,11 @@ When contributing to backend-related logic, make sure to sync-up `backend/appwri
 
 ## 🏗️ TODOs
 
-- if dead, red in leaderboard
-- claim anonymous account
 - circle with circle collision
+- more maps
 - upgrades
 - abilities
-- more maps
+- claim anonymous account
 
 ## 🤖 Svelte Kit Generated Documentation
 

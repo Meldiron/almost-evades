@@ -43,12 +43,8 @@ export abstract class GameRoom extends Room<RoomState> {
 
 		this.setSimulationInterval((deltaTime) => this.update(deltaTime));
 
-		this.onMessage('move', (client: Client, data: { direction: string }) => {
-			this.state.setDirection(client, data.direction);
-		});
-
-		this.onMessage('moveEnd', (client: Client, data: { direction: string }) => {
-			this.state.endDirection(client, data.direction);
+		this.onMessage('moveVector', (client: Client, data: { vector: number[] }) => {
+			this.state.setMoveVector(client, data.vector);
 		});
 
 		this.onMessage('slow', (client: Client) => {
@@ -71,6 +67,7 @@ export abstract class GameRoom extends Room<RoomState> {
 				player.isDead = false;
 				player.client.auth.session.isDead = false;
 				await AppwriteService.updateSession(player.client.auth.session);
+				player.client.send('requestFetchSession');
 			});
 
 			this.onMessage('cheatLevel', async (client: Client, data: { roomId: string }) => {
@@ -150,6 +147,7 @@ export abstract class GameRoom extends Room<RoomState> {
 					if (player.client) {
 						player.client.auth.session.isDead = true;
 						await AppwriteService.updateSession(player.client.auth.session);
+						player.client.send('requestFetchSession');
 					}
 				}
 			});
@@ -192,12 +190,14 @@ export abstract class GameRoom extends Room<RoomState> {
 					if (player.client) {
 						player.client.auth.session.isDead = false;
 						await AppwriteService.updateSession(player.client.auth.session);
+						player.client.send('requestFetchSession');
 					}
 
 					player2.isDead = false;
 					if (player2.client) {
 						player.client.auth.session.isDead = false;
 						await AppwriteService.updateSession(player.client.auth.session);
+						player.client.send('requestFetchSession');
 					}
 				}
 			});
