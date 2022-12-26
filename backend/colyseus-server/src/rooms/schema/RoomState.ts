@@ -111,6 +111,14 @@ export class Player extends Schema {
 		const vector = new Vector(moveVector[0], moveVector[1]).normalize();
 		this.moveVectorX = vector.x;
 		this.moveVectorY = vector.y;
+
+		if(Math.abs(this.moveVectorX) < 1 && Math.abs(this.moveVectorY) < 1) {
+			const biggerKey = this.moveVectorX > this.moveVectorY ? 'moveVectorX' : 'moveVectorY';
+			const k = 1 / Math.abs(this[biggerKey]);
+
+			this.moveVectorX *= k;
+			this.moveVectorY *= k;
+		}
 	}
 
 	async update(deltaTime: number) {
@@ -162,7 +170,7 @@ export class Player extends Schema {
 			}
 
 			if (this.isEnemy) {
-				this.setMoveVector([-1 * this.moveVectorX, this.moveVectorY]);
+				this.moveVectorX *= -1;
 			}
 		}
 
@@ -188,7 +196,7 @@ export class Player extends Schema {
 			}
 
 			if (this.isEnemy) {
-				this.setMoveVector([-1 * this.moveVectorX, this.moveVectorY]);
+				this.moveVectorX *= -1;
 			}
 		}
 
@@ -203,7 +211,7 @@ export class Player extends Schema {
 			collisionObject.y = collisionUp.y;
 
 			if (this.isEnemy) {
-				this.setMoveVector([this.moveVectorX, -1 * this.moveVectorY]);
+				this.moveVectorY *= -1;
 			}
 		}
 
@@ -218,7 +226,7 @@ export class Player extends Schema {
 			collisionObject.y = collisionDown.y;
 
 			if (this.isEnemy) {
-				this.setMoveVector([this.moveVectorX, -1 * this.moveVectorY]);
+				this.moveVectorY *= -1;
 			}
 		}
 
