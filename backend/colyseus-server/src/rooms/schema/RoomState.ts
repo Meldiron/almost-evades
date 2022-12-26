@@ -6,6 +6,9 @@ import { RoomRegistry } from '../../roomRegistry';
 import { RegistryData } from '../Room';
 
 export class Player extends Schema {
+	@type('string')
+	sessionId;
+
 	@type('number')
 	x;
 
@@ -50,6 +53,7 @@ export class Player extends Schema {
 
 	constructor(
 		private room: RoomState,
+		sessionId: string,
 		isEnemy: boolean,
 		nickname: string,
 		isSlow: boolean,
@@ -65,6 +69,7 @@ export class Player extends Schema {
 	) {
 		super();
 
+		this.sessionId = sessionId;
 		this.x = x;
 		this.y = y;
 		this.nickname = nickname;
@@ -89,9 +94,11 @@ export class Player extends Schema {
 		const baseSpeed = (deltaTime * 0.3) * this.baseSpeed;
 		let speed = baseSpeed;
 
+		/*
 		if (this.x < 32 * 8 || this.x > (this.room.width - 8) * 32) {
 			speed = baseSpeed * 2;
 		}
+		*/
 
 		if (this.isSlow) {
 			speed = baseSpeed / 3;
@@ -228,6 +235,9 @@ export class RoomState extends Schema {
 	@type('boolean')
 	isWin = false;
 
+	@type('number')
+	maxLevel: number;
+
 	constructor(public registry: RegistryData) {
 		super();
 
@@ -235,6 +245,7 @@ export class RoomState extends Schema {
 		this.width = registry.width;
 		this.height = registry.height;
 		this.isWin = registry.isWin;
+		this.maxLevel = registry.maxLevel;
 	}
 
 	createEnemy(
@@ -253,11 +264,12 @@ export class RoomState extends Schema {
 
 		this.players.set(
 			enemyId,
-			new Player(this, true, '', false, config.directionX, config.directionY, config.x, config.y, false, config.color, config.speed, config.radius)
+			new Player(this, enemyId, true, '', false, config.directionX, config.directionY, config.x, config.y, false, config.color, config.speed, config.radius)
 		);
 	}
 
 	createPlayer(client: Client) {
+		const sessionId = client.auth.session.$id;
 		const nickname = client.auth.session.nickname;
 		const x = client.auth.session.x;
 		const y = client.auth.session.y;
@@ -265,7 +277,7 @@ export class RoomState extends Schema {
 
 		this.players.set(
 			client.sessionId,
-			new Player(this, false, nickname, false, 'none', 'none', x, y, isDead, [255, 0, 0], 1, 16, client)
+			new Player(this, sessionId, false, nickname, false, 'none', 'none', x, y, isDead, [255, 0, 0], 1, 16, client)
 		);
 	}
 

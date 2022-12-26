@@ -11,7 +11,8 @@ export class AA10 extends GameRoom {
 			height: 16,
 			previous: 'AngelicAlley009',
 			next: 'AngelicAlley011',
-			isWin: false
+			isWin: false,
+			maxLevel: 10
 		}
 	}
 

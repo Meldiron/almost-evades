@@ -1,8 +1,9 @@
 import { Client, Room } from 'colyseus';
 import { AppwriteService } from '../appwrite';
 import { RoomRegistry } from '../roomRegistry';
+import { LobbyState } from './schema/LobbyState';
 
-export class Lobby extends Room {
+export class Lobby extends Room<LobbyState> {
 	async onAuth(client: Client, options: { jwt: string, sessionId?: string, desiredRoomId: string }) {
 		if(options.sessionId) {
 			const session = await AppwriteService.getSession(options.sessionId);
@@ -46,6 +47,13 @@ export class Lobby extends Room {
 	onCreate() {
 		this.maxClients = 100;
 
+		this.setState(new LobbyState());
+
+		// Leaderboard
+		this.onMessage('changeRoom', (client: Client, data: { roomId: string }) => {
+			this.state.changeRoom(client, data.roomId);
+		});
+
 		// Chat
 		this.onMessage('sendMessage', (client: Client, data: { msg: string }) => {
 			if(!data.msg) {
@@ -64,7 +72,12 @@ export class Lobby extends Room {
 		});
 	}
 
-	onJoin(client: Client, options?: any, auth?: any): void | Promise<any> {
+	onJoin(client: Client) {
+		this.state.createPlayer(client);
 		client.send('chatMessage', { nickname: 'SYSTEM', msg: 'Type /r to restart or /l to leave.' });
+	}
+
+	onLeave(client: Client) {
+		this.state.removePlayer(client);
 	}
 }

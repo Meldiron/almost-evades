@@ -1,19 +1,11 @@
 TODO:
+- profiles page
+- profiles leaderboard (VPs)
+- claim anonymous account
+- circle with circle collision
 - upgrades
 - abilities
 - more maps
-- leaderboard
-- reward for win + profiles
-- speed 1.1 on enemy in 5,6,7,..
-- stroke on players+enemies to better see
-- player layer above enemy layer
-- bigger enemy more in background
-- Cannot kill on spawn
-- claim anonymous account
-- Dont disconenct from lobby on /r
-- circle with circle collision
-- disablee speedup on spawn
-- in-game table of players
 
 ```sh
 # Machine setup

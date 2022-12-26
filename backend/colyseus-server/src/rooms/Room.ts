@@ -6,13 +6,14 @@ import { Player } from './schema/RoomState';
 import { RoomState } from './schema/RoomState';
 
 export type RegistryData = {
-	id: string,
-	name: string,
-	width: number,
-	height: number,
-	previous: string,
-	next: string,
-	isWin: boolean
+	id: string;
+	name: string;
+	width: number;
+	height: number;
+	previous: string;
+	next: string;
+	isWin: boolean;
+	maxLevel: number;
 };
 
 export abstract class GameRoom extends Room<RoomState> {
@@ -22,11 +23,11 @@ export abstract class GameRoom extends Room<RoomState> {
 		const session = await AppwriteService.getSession(options.sessionId);
 		const roomRegistry = this.getRegistryData();
 
-		if(roomRegistry.id !== session.roomId) {
+		if (roomRegistry.id !== session.roomId) {
 			return false;
 		}
 
-		if(session.isActive) {
+		if (session.isActive) {
 			return false;
 		}
 
@@ -34,7 +35,7 @@ export abstract class GameRoom extends Room<RoomState> {
 
 		await AppwriteService.updateSession(session);
 
-		return {session};
+		return { session };
 	}
 
 	onCreate() {
@@ -64,38 +65,38 @@ export abstract class GameRoom extends Room<RoomState> {
 			client.send('restartResponse');
 		});
 
-		/*
-		this.onMessage('cheatRevive', async (client: Client) => {
-			const player = this.state.players.get(client.sessionId);
-			player.isDead = false;
-			player.client.auth.session.isDead = false;
-			await AppwriteService.updateSession(player.client.auth.session);
-		});
+		if (process.env.ALLOW_CHEATS === 'yes') {
+			this.onMessage('cheatRevive', async (client: Client) => {
+				const player = this.state.players.get(client.sessionId);
+				player.isDead = false;
+				player.client.auth.session.isDead = false;
+				await AppwriteService.updateSession(player.client.auth.session);
+			});
 
-		this.onMessage('cheatLevel', async (client: Client, data: { roomId: string }) => {
-			const player = this.state.players.get(client.sessionId);
+			this.onMessage('cheatLevel', async (client: Client, data: { roomId: string }) => {
+				const player = this.state.players.get(client.sessionId);
 
-			player.isZombie = true;
-			const roomData = RoomRegistry.get(data.roomId);
-			client.auth.session.roomId = data.roomId;
-			client.auth.session.x = 4 * 32;
-			client.auth.session.y = Math.floor(roomData.height / 2) * 32;
-			await AppwriteService.updateSession(client.auth.session);
-			client.send('goToRoom', { roomId: data.roomId });
-		});
+				player.isZombie = true;
+				const roomData = RoomRegistry.get(data.roomId);
+				client.auth.session.roomId = data.roomId;
+				client.auth.session.x = 4 * 32;
+				client.auth.session.y = Math.floor(roomData.height / 2) * 32;
+				await AppwriteService.updateSession(client.auth.session);
+				client.send('goToRoom', { roomId: data.roomId });
+			});
 
-		this.onMessage('cheatLevelEnd', async (client: Client, data: { roomId: string }) => {
-			const player = this.state.players.get(client.sessionId);
+			this.onMessage('cheatLevelEnd', async (client: Client, data: { roomId: string }) => {
+				const player = this.state.players.get(client.sessionId);
 
-			player.isZombie = true;
-			const roomData = RoomRegistry.get(data.roomId);
-			client.auth.session.roomId = data.roomId;
-			client.auth.session.x = (roomData.width - 4) * 32;
-			client.auth.session.y = Math.floor(roomData.height / 2) * 32;
-			await AppwriteService.updateSession(client.auth.session);
-			client.send('goToRoom', { roomId: data.roomId });
-		});
-		*/
+				player.isZombie = true;
+				const roomData = RoomRegistry.get(data.roomId);
+				client.auth.session.roomId = data.roomId;
+				client.auth.session.x = (roomData.width - 4) * 32;
+				client.auth.session.y = Math.floor(roomData.height / 2) * 32;
+				await AppwriteService.updateSession(client.auth.session);
+				client.send('goToRoom', { roomId: data.roomId });
+			});
+		}
 	}
 
 	onJoin(client: Client) {
@@ -117,26 +118,33 @@ export abstract class GameRoom extends Room<RoomState> {
 
 		// Player <-> Enemy collision
 		this.state.players.forEach((player) => {
-			if(player.isEnemy) {
+			if (player.isEnemy) {
+				return;
+			}
+
+			if (player.x < 32 * 8 || player.x > (this.getRegistryData().width - 8) * 32) {
 				return;
 			}
 
 			this.state.players.forEach(async (enemy) => {
-				if(!enemy.isEnemy) {
+				if (!enemy.isEnemy) {
 					return;
 				}
 
-				const collision = CollideUtils.circleWithCircle({
-					x: player.x,
-					y: player.y,
-					radius: player.radius
-				}, {
-					x: enemy.x,
-					y: enemy.y,
-					radius: enemy.radius
-				});
+				const collision = CollideUtils.circleWithCircle(
+					{
+						x: player.x,
+						y: player.y,
+						radius: player.radius
+					},
+					{
+						x: enemy.x,
+						y: enemy.y,
+						radius: enemy.radius
+					}
+				);
 
-				if(collision.collide) {
+				if (collision.collide) {
 					player.isDead = true;
 
 					if (player.client) {
@@ -145,38 +153,41 @@ export abstract class GameRoom extends Room<RoomState> {
 					}
 				}
 			});
-		})
+		});
 
 		// Player <-> Player collision
 		this.state.players.forEach((player) => {
-			if(player.isEnemy) {
+			if (player.isEnemy) {
 				return;
 			}
 
 			this.state.players.forEach(async (player2) => {
-				if(player2.isEnemy) {
+				if (player2.isEnemy) {
 					return;
 				}
 
-				if(player == player2) {
+				if (player == player2) {
 					return;
 				}
 
-				if(player.isDead && player2.isDead) {
+				if (player.isDead && player2.isDead) {
 					return;
 				}
 
-				const collision = CollideUtils.circleWithCircle({
-					x: player.x,
-					y: player.y,
-					radius: player.radius
-				}, {
-					x: player2.x,
-					y: player2.y,
-					radius: player2.radius
-				});
+				const collision = CollideUtils.circleWithCircle(
+					{
+						x: player.x,
+						y: player.y,
+						radius: player.radius
+					},
+					{
+						x: player2.x,
+						y: player2.y,
+						radius: player2.radius
+					}
+				);
 
-				if(collision.collide) {
+				if (collision.collide) {
 					player.isDead = false;
 					if (player.client) {
 						player.client.auth.session.isDead = false;

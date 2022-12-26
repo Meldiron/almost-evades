@@ -15,8 +15,26 @@
 	let gameRoom: any = null;
 
 	let ctx: any = null;
-	const players: any = {};
-	let levelName = '';
+	let players: any = {};
+	let roomName = '';
+	let roomWidth = 9999;
+	let roomMaxLevel = 99;
+
+	let leaderboard: any = {};
+	let leaderboardTick = true;
+	function getPercentage(leaderboardSessionId: any) {
+		for (const sessionId in players) {
+			const player = players[sessionId];
+
+			if (player.state.sessionId === leaderboardSessionId) {
+				const x = player.state.x;
+				const perc = Math.round((x / (roomWidth * 32)) * 100);
+				return `, ${perc}%`;
+			}
+		}
+
+		return '';
+	}
 
 	let messages: any = [];
 	async function addMessage(data: any) {
@@ -41,6 +59,16 @@
 			return;
 		}
 
+		function lTick() {
+			leaderboardTick = !leaderboardTick;
+
+			setTimeout(() => {
+				lTick();
+			}, 100);
+		}
+
+		lTick();
+
 		ctx = kaboom({
 			root: document.getElementById('game') as HTMLElement,
 			width: window.innerWidth,
@@ -48,7 +76,7 @@
 			background: [28, 28, 28]
 		});
 
-		layers(['bg', 'game', 'ui'], 'game');
+		layers(['bg', 'enemies', 'players', 'ui'], 'game');
 
 		await loadSprite('tiles', '/tiles.png');
 
@@ -61,6 +89,20 @@
 		colyseus = new ColyseusService(server);
 
 		lobbyRoom = await colyseus.joinLobby(map);
+
+		lobbyRoom.state.players.onAdd = (player: any, sessionId: any) => {
+			leaderboard[sessionId] = {
+				state: player
+			};
+
+			player.onChange = function (_changes: any) {
+				leaderboard[sessionId].state = player;
+			};
+		};
+
+		lobbyRoom.state.players.onRemove = (player: any, sessionId: any) => {
+			delete leaderboard[sessionId];
+		};
 
 		lobbyRoom.onLeave((code: any) => {
 			if (code !== 1000) {
@@ -95,9 +137,12 @@
 
 		if (gameRoom) {
 			await gameRoom.leave();
+			players = {};
 		}
 
 		gameRoom = await colyseus.joinRoom(data.roomId);
+
+		lobbyRoom.send('changeRoom', { roomId: data.roomId });
 
 		didInit = false;
 
@@ -111,6 +156,7 @@
 
 		gameRoom.onMessage('restartResponse', async () => {
 			await lobbyRoom.leave();
+			leaderboard = {};
 			localStorage.removeItem('sessionId');
 			goToLobby();
 		});
@@ -131,7 +177,9 @@
 	let didInit = false;
 	let didInitOnce = false;
 	async function initCanvas(state: any) {
-		levelName = state.name;
+		roomName = state.name;
+		roomMaxLevel = state.maxLevel;
+		roomWidth = state.width;
 
 		if (!didInitOnce) {
 			didInitOnce = true;
@@ -272,6 +320,9 @@
 				'movable',
 				pos(player.x, player.y),
 				circle(player.radius),
+				layer(player.isEnemy ? 'enemies' : 'players'),
+				z(1000 - player.radius),
+				outline(2),
 				origin('center'),
 				opacity(player.isDead ? 0.5 : 1),
 				color(player.colorR, player.colorG, player.colorB),
@@ -287,7 +338,7 @@
 					'destroyable',
 					text(player.nickname, {
 						size: 16,
-						font: "apl386",
+						font: 'apl386',
 						letterSpacing: -2
 					}),
 					color(0, 0, 0),
@@ -336,14 +387,16 @@
 		} else if (chatMsg === '/l') {
 			await gameRoom.leave();
 			await lobbyRoom.leave();
+			players = {};
+			leaderboard = {};
 			localStorage.removeItem('sessionId');
 			goto('/');
 		} else if (chatMsg === '/revive') {
 			sendAction('cheatRevive');
 		} else if (chatMsg.startsWith('/level')) {
-			sendAction('cheatLevel' , { roomId: chatMsg.split(' ')[1] });
+			sendAction('cheatLevel', { roomId: chatMsg.split(' ')[1] });
 		} else if (chatMsg.startsWith('/levelEnd')) {
-			sendAction('cheatLevelEnd' , { roomId: chatMsg.split(' ')[1] });
+			sendAction('cheatLevelEnd', { roomId: chatMsg.split(' ')[1] });
 		} else {
 			lobbyRoom.send('sendMessage', { msg: chatMsg });
 		}
@@ -358,12 +411,12 @@
 
 <div id="game" class="fixed inset-0 font-normal" />
 <div class="fixed inset-0 z-[100]">
-	{#if levelName}
+	{#if roomName}
 		<div class="flex justify-center">
 			<h1
 				class="title font-bold text-2xl p-3 border-2 border-[rgb(28,28,28)] border-t-none rounded-b-md bg-white"
 			>
-				{levelName}
+				{roomName}
 			</h1>
 		</div>
 	{/if}
@@ -371,9 +424,14 @@
 
 <div class="fixed left-4 top-4 w-[300px] z-[110]">
 	<div class="shadow-md rounded-md">
-		<div id="chat" class="h-[200px] overflow-auto text-white bg-black p-3 rounded-t-md">
+		<div
+			id="chat"
+			class="h-[200px] overflow-auto text-white bg-black bg-opacity-50 p-3 rounded-t-md"
+		>
 			{#each messages as message}
-				<p><span class="text-slate-500">{message.nickname}: </span>{message.msg}</p>
+				<p>
+					<span class="text-gray-200 text-xs uppercase">{message.nickname}: </span>{message.msg}
+				</p>
 			{/each}
 		</div>
 		<form on:submit|preventDefault={onSubmitMessage}>
@@ -382,11 +440,33 @@
 				on:keyup={onInput}
 				bind:value={chatMsg}
 				type="text"
-				class="w-full bg-white rounded-b-md p-2"
+				class="w-full bg-white bg-opacity-50 rounded-b-md p-2 text-black placeholder-gray-700"
 				placeholder="Press enter to chat"
 			/>
 			<button type="button" class="hidden" />
 		</form>
+	</div>
+</div>
+
+<div class="fixed right-4 top-4 w-[300px] z-[110]">
+	<div class="shadow-md rounded-md">
+		<div class="h-[200px] overflow-auto text-white bg-black bg-opacity-50 p-3 rounded-md">
+			<h3 class="text-sm uppercase text-center text-gray-200">PLAYERS</h3>
+			{#each Object.entries(leaderboard) as [sessionId, player]}
+				<p>
+					{#if player.state.level <= roomMaxLevel}
+						{#key leaderboardTick}
+							<span class="text-gray-200 text-xs uppercase"
+								>[{player.state.level}/{roomMaxLevel}{getPercentage(player.state.sessionId)}]</span
+							>
+						{/key}
+					{:else}
+						<span class="text-gray-200 text-xs uppercase">[WIN]</span>
+					{/if}
+					{player.state.nickname}
+				</p>
+			{/each}
+		</div>
 	</div>
 </div>
 
