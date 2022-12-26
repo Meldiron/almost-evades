@@ -1,12 +1,52 @@
-TODO:
-- if dead, red in leaderboard
-- profiles page
-- profiles leaderboard (VPs)
-- claim anonymous account
-- circle with circle collision
-- upgrades
-- abilities
-- more maps
+![Almost Cover](static/og-cover.png)
+
+# 🔴 Almost Evades
+
+> Teamwork-based multiplayer game.
+
+![Almost Icon](static/favicon.png)
+
+## 🧰 Tech Stack
+
+- [Appwrite](https://appwrite.io/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Svelte Kit](https://kit.svelte.dev/)
+- [Kaboom](https://kaboomjs.com/)
+- [Colyseus](https://www.colyseus.io/)
+
+## 🛠️ Setup Server
+
+1. Setup Appwrite server
+2. Create project `almostEvades`
+3. Install Appwrite CLI
+4. Login with `appwrite login`
+5. Enter `cd backend`
+6. Deploy database structure with `appwrite deploy collection`
+7. Deploy functions with `appwrite deploy function`
+8. Set variables on deployed functions. There is `backend/functions` folder for each function. They all have `README.md` describing what variables they need
+
+## 🌐 Setup Colyseus Server
+
+1. Enter `cd backend/colyseus-server`
+2. Install dependencies `npm install`
+3. Create .env `cp .env.example .env`
+4. Edit .env `nano .env`
+5. Start server `npm start`
+
+## 👀 Setup Client
+
+1. Install libarries `npm install`
+2. Update `appwriteEndpoint` in `src/lib/appwrite.ts` (Appwrite endpoint from server setup)
+3. Start server `npm run dev`
+
+## 🚀 Deploy Client
+
+1. Deploy frontend and backend on the same domain. For example, `myapp.com` and `appwrite.myapp.com`
+2. Add frontend hostname as a platform in Appwrite project
+
+## 🛎️ Deploy Colyseus Server
+
+Run following commands to setup an instance of Colyseus server:
 
 ```sh
 # Machine setup
@@ -60,7 +100,29 @@ screen -S colyseus
 node lib/index.js
 ```
 
-# create-svelte
+## 🤝 Contributing
+
+When contributing to backend-related logic, make sure to sync-up `backend/appwrite.json` by running the `appwrite init` commands in the `backend` folder.
+
+## 🖼️ Screenshots
+
+![Screenshot](screenshots/ss1.png)
+![Screenshot](screenshots/ss2.png)
+![Screenshot](screenshots/ss3.png)
+![Screenshot](screenshots/ss4.png)
+
+## 🏗️ TODOs
+
+- if dead, red in leaderboard
+- profiles page
+- profiles leaderboard (VPs)
+- claim anonymous account
+- circle with circle collision
+- upgrades
+- abilities
+- more maps
+
+## 🤖 Svelte Kit Generated Documentation
 
 Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
 

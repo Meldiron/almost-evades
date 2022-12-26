@@ -4,23 +4,21 @@ Welcome to the documentation of this function 👋 We strongly recommend keeping
 
 ## 🤖 Documentation
 
-Simple function similar to typical "hello world" example, but instead, we return a simple JSON that tells everyone how awesome developers are.
-
-<!-- Update with your description, for example 'Create Stripe payment and return payment URL' -->
+Function to create a profile for a user. It's a middleware for creating a `profiles` document as this function is forcing document ID to be same as user ID.
 
 _Example input:_
 
-This function expects no input
-
-<!-- If input is expected, add example -->
+```json
+{
+ "nickname": "Meldiron",
+}
 
 _Example output:_
 
-<!-- Update with your expected output -->
-
 ```json
 {
- "areDevelopersAwesome": true
+ "ok": true,
+ "msg": "Profile successfully created."
 }
 ```
 
@@ -30,7 +28,6 @@ List of environment variables used by this cloud function:
 
 - **APPWRITE_FUNCTION_ENDPOINT** - Endpoint of Appwrite project
 - **APPWRITE_FUNCTION_API_KEY** - Appwrite API Key
-<!-- Add your custom environment variables -->
 
 ## 🚀 Deployment
 
