@@ -5,22 +5,6 @@ import { CollideUtils } from '../../collideUtils';
 import { RoomRegistry } from '../../roomRegistry';
 import { RegistryData } from '../Room';
 
-export class Vector {
-    constructor(public x: number, public y: number) {}
-
-    public magnitude() {
-        return Math.sqrt(this.x * this.x + this.y * this.y);
-    }
-
-    public divide(scalar: number) {
-        return new Vector(this.x / scalar, this.y / scalar);
-    }
-
-    public normalize() {
-        return this.divide(this.magnitude());
-    }
-}
-
 export class Player extends Schema {
 	@type('string')
 	sessionId;
@@ -108,12 +92,11 @@ export class Player extends Schema {
 			return;
 		}
 
-		const vector = new Vector(moveVector[0], moveVector[1]).normalize();
-		this.moveVectorX = vector.x;
-		this.moveVectorY = vector.y;
+		this.moveVectorX = Math.min(moveVector[0], 1);
+		this.moveVectorY = Math.min(moveVector[1], 1);
 
 		if(Math.abs(this.moveVectorX) < 1 && Math.abs(this.moveVectorY) < 1) {
-			const biggerKey = this.moveVectorX > this.moveVectorY ? 'moveVectorX' : 'moveVectorY';
+			const biggerKey = Math.abs(this.moveVectorX) > Math.abs(this.moveVectorY) ? 'moveVectorX' : 'moveVectorY';
 			const k = 1 / Math.abs(this[biggerKey]);
 
 			this.moveVectorX *= k;
