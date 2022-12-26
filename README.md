@@ -1,4 +1,5 @@
 TODO:
+- if dead, red in leaderboard
 - profiles page
 - profiles leaderboard (VPs)
 - claim anonymous account

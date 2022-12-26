@@ -341,6 +341,8 @@
 						font: 'apl386',
 						letterSpacing: -2
 					}),
+					layer('players'),
+					z(1000 - player.radius + 1),
 					color(0, 0, 0),
 					pos(player.x, player.y - 16),
 					origin('center')
